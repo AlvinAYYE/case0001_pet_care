@@ -252,7 +252,9 @@ const resolveAppAssetUrl = (path: string): string => new URL(path, window.locati
 
 const inferredApiBaseUrl = import.meta.env.DEV
   ? '/api'
-  : new URL('../../backend/public/api/', window.location.href).toString().replace(/\/$/, '')
+  : window.location.pathname.includes('/frontend/')
+    ? new URL('../../backend/public/api/', window.location.href).toString().replace(/\/$/, '')
+    : `${window.location.origin}/api`
 
 const apiBaseUrl =
     import.meta.env.VITE_API_BASE_URL ||
