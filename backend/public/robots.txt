@@ -1,0 +1,18 @@
+# robots.txt (backend)
+# Purpose: prevent indexing of admin and API endpoints.
+# NOTE: robots.txt is not an access control mechanism.
+
+User-agent: *
+
+# Block admin area
+Disallow: /admin/
+
+# Block API endpoints
+Disallow: /api/
+
+# Allow uploaded media (images/files used by the frontend)
+Allow: /uploads/
+
+# Sitemap
+# Add an absolute URL when your production domain is known, e.g.:
+# Sitemap: https://www.example.com/sitemap.xml

@@ -1,0 +1,20 @@
+# robots.txt (production)
+# Purpose: allow crawling of public pages and required resources,
+# while blocking admin and API endpoints.
+# NOTE: robots.txt is not an access control mechanism.
+
+User-agent: *
+
+# Block admin area (proxied to backend)
+Disallow: /admin/
+
+# Block API endpoints (not useful for indexing)
+Disallow: /api/
+
+# Allow essential static assets and media
+Allow: /assets/
+Allow: /uploads/
+
+# Sitemap
+# Add an absolute URL when your production domain is known, e.g.:
+# Sitemap: https://www.example.com/sitemap.xml

@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap');
+@import 'tailwindcss';
+
+html,
+body {
+    margin: 0;
+    min-width: 320px;
+    font-family: 'Noto Sans TC', sans-serif;
+    scroll-behavior: smooth;
+    scroll-padding-top: 90px; /* 改成你的 navbar 高度 */
+}
+
+h1,
+h2,
+h3 {
+    font-family: 'Cormorant Garamond', serif;
+}
+
+::selection {
+    background: #d8c2a6;
+    color: #5a402a;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #b48a63 #f4e8d8;
+}
+
+*::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+*::-webkit-scrollbar-track {
+    background: linear-gradient(180deg, #f8eee1 0%, #f1e2ce 100%);
+    border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #c79a6f 0%, #a9784d 100%);
+    border: 2px solid #f4e8d8;
+    border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #b9895d 0%, #95673f 100%);
+}
+
+button,
+input[type='button'],
+input[type='submit'],
+input[type='reset'] {
+    cursor: pointer;
+}

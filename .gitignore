@@ -1,0 +1,82 @@
+# =========================
+# OS / Editor / IDE
+# =========================
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+.idea/
+.vscode/*
+!.vscode/extensions.json
+Case0001 恆寵愛Perpetuity.docx
+合約.docx
+合約.pdf
+合約附件.docx
+合約附件.pdf
+Target.md
+DOCKER_SETUP.md
+# =========================
+# Frontend (Node / Vite)
+# =========================
+node_modules/
+dist/
+dist-ssr/
+.vite/
+coverage/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# =========================
+# PHP / Backend
+# =========================
+vendor/
+
+# Keep uploads out of Git by default
+backend/public/uploads/*
+!backend/public/uploads/.gitkeep
+
+# =========================
+# Environment / Secrets
+# =========================
+.env
+.env.*
+!.env.example
+
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.cer
+*.csr
+
+# Database / local dumps
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+
+# =========================
+# AI tools / local agent data
+# =========================
+.opencode/
+.cursor/
+.aider*
+.claude/
+
+# Recovery / backups / temp
+recovery/
+*.bak
+*.tmp
+*.temp
+
+# Documents (prevent accidental upload)
+*.doc
+*.docx
+*.pdf
