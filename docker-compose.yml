@@ -1,7 +1,6 @@
 services:
   mysql:
     image: mysql:8.0
-    container_name: pet-hotel-mysql
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootsecret}
@@ -22,7 +21,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: pet-hotel-backend
     restart: unless-stopped
     depends_on:
       mysql:
@@ -40,7 +38,7 @@ services:
       DB_CHARSET: utf8mb4
     command: /bin/sh -c "mkdir -p /var/www/html/public/uploads && chown -R www-data:www-data /var/www/html/public/uploads && chmod -R ug+rwX /var/www/html/public/uploads && apache2-foreground"
     ports:
-      - "8080:80"
+      - "${BACKEND_PORT:-8080}:80"
     volumes:
       - ./backend/public/uploads:/var/www/html/public/uploads
 
@@ -51,12 +49,11 @@ services:
       args:
         VITE_NEWS_API_URL: ${VITE_NEWS_API_URL:-/api/news.php}
         VITE_SENIOR_API_URL: ${VITE_SENIOR_API_URL:-/api/senior-care.php}
-    container_name: pet-hotel-frontend
     restart: unless-stopped
     depends_on:
       - backend
     ports:
-      - "5180:80"
+      - "${FRONTEND_PORT:-5180}:80"
 
 volumes:
   mysql_data:

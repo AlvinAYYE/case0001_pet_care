@@ -5,6 +5,7 @@ require_once __DIR__ . '/../src/Env.php';
 require_once __DIR__ . '/../src/Http.php';
 require_once __DIR__ . '/../src/Database.php';
 require_once __DIR__ . '/../src/ContentRepository.php';
+require_once __DIR__ . '/../src/DevRepository.php';
 
 loadEnv(__DIR__ . '/../.env');
 date_default_timezone_set(env('APP_TIMEZONE', 'Asia/Taipei') ?? 'Asia/Taipei');
@@ -266,6 +267,66 @@ try {
         jsonResponse(['success' => true, 'data' => ['file_path' => '/uploads/' . $filename, 'mime_type' => $mime]], 201);
         exit;
     }
+
+    // --- DEV API Block Start ---
+    $isDevRoute = (count($segments) >= 2 && $segments[0] === 'api' && $segments[1] === 'dev');
+    if ($isDevRoute) {
+        $requireApiKey($apiKey);
+        $enableDevApi = filter_var((string) (env('APP_ENABLE_DEV_API', 'false') ?? 'false'), FILTER_VALIDATE_BOOL);
+        if (!$enableDevApi) {
+            jsonResponse(['success' => false, 'message' => 'DEV APIs are disabled.'], 403);
+            exit;
+        }
+
+        $devRepo = new DevRepository(Database::getConnection());
+
+        if ($segments === ['api', 'dev', 'gallery'] && $method === 'GET') {
+            $uploadsDir = __DIR__ . '/uploads';
+            jsonResponse(['success' => true, 'data' => $devRepo->getGallery($uploadsDir)]);
+            exit;
+        }
+
+        if (count($segments) === 4 && $segments[2] === 'gallery' && $method === 'DELETE') {
+            $uploadsDir = __DIR__ . '/uploads';
+            $filename = basename(urldecode($segments[3]));
+            $success = $devRepo->deleteImage($uploadsDir, $filename);
+            if ($success) {
+                jsonResponse(['success' => true, 'message' => 'Image deleted.']);
+            } else {
+                jsonResponse(['success' => false, 'message' => 'Image not found or cannot be deleted.'], 404);
+            }
+            exit;
+        }
+
+        if ($segments === ['api', 'dev', 'db', 'export'] && $method === 'GET') {
+            $sql = $devRepo->exportDatabase();
+            header('Content-Type: application/sql');
+            header('Content-Disposition: attachment; filename="backup_' . date('Ymd_His') . '.sql"');
+            echo $sql;
+            exit;
+        }
+
+        if ($segments === ['api', 'dev', 'db', 'import'] && $method === 'POST') {
+            if (!isset($_FILES['db_file']) || !is_array($_FILES['db_file']) || (int) $_FILES['db_file']['error'] !== UPLOAD_ERR_OK) {
+                jsonResponse(['success' => false, 'message' => 'Database sql file is required or invalid.'], 400);
+                exit;
+            }
+            $sqlContent = file_get_contents($_FILES['db_file']['tmp_name']);
+            if ($sqlContent === false || trim($sqlContent) === '') {
+                jsonResponse(['success' => false, 'message' => 'Empty or unreadable SQL file.'], 400);
+                exit;
+            }
+
+            try {
+                $devRepo->importDatabase($sqlContent);
+                jsonResponse(['success' => true, 'message' => 'Database imported successfully.']);
+            } catch (Exception $e) {
+                jsonResponse(['success' => false, 'message' => $e->getMessage()], 500);
+            }
+            exit;
+        }
+    }
+    // --- DEV API Block End ---
 
     jsonResponse(['success' => false, 'message' => 'Not Found', 'path' => '/' . implode('/', $segments)], 404);
 } catch (Throwable $e) {

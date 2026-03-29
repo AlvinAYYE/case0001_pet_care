@@ -16,5 +16,4 @@ Allow: /assets/
 Allow: /uploads/
 
 # Sitemap
-# Add an absolute URL when your production domain is known, e.g.:
-# Sitemap: https://www.example.com/sitemap.xml
+Sitemap: https://www.perpetuity-pet-care.com/sitemap.xml

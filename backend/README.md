@@ -53,6 +53,17 @@
 - 所有寫入 API（POST/PUT/DELETE）需帶 `X-API-Key` header
 - 值為 `.env` 的 `APP_API_KEY`
 
+## DEV 資料庫匯入保護
+
+- `POST /api/dev/db/import` 僅在 `.env` 設定 `APP_ENABLE_DEV_API=true` 時可用
+- 匯入流程目前為：
+  1. 先完整備份目前資料庫
+  2. `DROP DATABASE` 並重新建立同名資料庫
+  3. 匯入上傳的 SQL
+  4. 檢查資料表是否存在且基本查詢正常
+- 若匯入或驗證失敗，會自動重建資料庫並還原剛才的備份
+- 這個流程會整庫重建，不適合在正式環境使用
+
 ```ts
 const api = axios.create({
   baseURL: 'http://localhost/case0001_20260301/backend/public/api',

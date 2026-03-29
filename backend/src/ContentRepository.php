@@ -172,7 +172,7 @@ final class ContentRepository
                     updated_at = CURRENT_TIMESTAMP';
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
-            'business_hours' => $data['business_hours'],
+            'business_hours' => $data['business_hours'] ?? null,
         ]);
 
         return $this->getStoreInfo();
@@ -383,7 +383,7 @@ final class ContentRepository
             return true;
         }
 
-        $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM senior_care_content WHERE image_url = :image_path');
+        $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM senior_care_content WHERE image_url = :image_path OR image_url_2 = :image_path OR image_url_3 = :image_path OR image_url_4 = :image_path');
         $stmt->execute(['image_path' => $imagePath]);
 
         return (int) $stmt->fetchColumn() > 0;
@@ -392,7 +392,7 @@ final class ContentRepository
     public function getSeniorCareContent(): array
     {
         $stmt = $this->pdo->query(
-            'SELECT id, title, subtitle, description, tags, image_url AS imageUrl, updated_at
+            'SELECT id, title, subtitle, description, tags, image_url AS imageUrl, image_url_2 AS imageUrl2, image_url_3 AS imageUrl3, image_url_4 AS imageUrl4, updated_at
              FROM senior_care_content
              WHERE id = 1
              LIMIT 1'
@@ -404,14 +404,17 @@ final class ContentRepository
 
     public function upsertSeniorCareContent(array $data): array
     {
-        $sql = 'INSERT INTO senior_care_content (id, title, subtitle, description, tags, image_url)
-                VALUES (1, :title, :subtitle, :description, :tags, :image_url)
+        $sql = 'INSERT INTO senior_care_content (id, title, subtitle, description, tags, image_url, image_url_2, image_url_3, image_url_4)
+                VALUES (1, :title, :subtitle, :description, :tags, :image_url, :image_url_2, :image_url_3, :image_url_4)
                 ON DUPLICATE KEY UPDATE
                     title = VALUES(title),
                     subtitle = VALUES(subtitle),
                     description = VALUES(description),
                     tags = VALUES(tags),
                     image_url = VALUES(image_url),
+                    image_url_2 = VALUES(image_url_2),
+                    image_url_3 = VALUES(image_url_3),
+                    image_url_4 = VALUES(image_url_4),
                     updated_at = CURRENT_TIMESTAMP';
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
@@ -420,6 +423,9 @@ final class ContentRepository
             'description' => $data['description'],
             'tags' => $data['tags'],
             'image_url' => $data['image_url'],
+            'image_url_2' => $data['image_url_2'] ?? '',
+            'image_url_3' => $data['image_url_3'] ?? '',
+            'image_url_4' => $data['image_url_4'] ?? '',
         ]);
 
         return $this->getSeniorCareContent();

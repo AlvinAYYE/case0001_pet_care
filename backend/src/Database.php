@@ -13,16 +13,26 @@ final class Database
             return self::$connection;
         }
 
+        $name = env('DB_NAME', 'pet_hotel_site');
+        self::$connection = self::createConnection(is_string($name) ? $name : 'pet_hotel_site');
+
+        return self::$connection;
+    }
+
+    public static function createConnection(?string $databaseName = null): PDO
+    {
         $host = env('DB_HOST', '127.0.0.1');
         $port = env('DB_PORT', '3306');
-        $name = env('DB_NAME', 'pet_hotel_site');
         $user = env('DB_USER', 'root');
         $pass = env('DB_PASS', '');
         $charset = env('DB_CHARSET', 'utf8mb4');
 
-        $dsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=%s', $host, $port, $name, $charset);
+        $dsn = sprintf('mysql:host=%s;port=%s;charset=%s', $host, $port, $charset);
+        if (is_string($databaseName) && $databaseName !== '') {
+            $dsn = sprintf('%s;dbname=%s', $dsn, $databaseName);
+        }
 
-        self::$connection = new PDO(
+        return new PDO(
             $dsn,
             $user,
             $pass,
@@ -32,7 +42,5 @@ final class Database
                 PDO::ATTR_EMULATE_PREPARES => false,
             ]
         );
-
-        return self::$connection;
     }
 }

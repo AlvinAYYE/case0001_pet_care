@@ -111,6 +111,9 @@ type ApiSeniorContent = {
   tags?: string
   imageUrl?: string
   image_url?: string
+  imageUrl2?: string
+  imageUrl3?: string
+  imageUrl4?: string
 }
 
 type ContentSection = {
@@ -144,6 +147,9 @@ type SeniorContent = {
   description: string
   tags: string[]
   imageUrl: string
+  imageUrl2?: string
+  imageUrl3?: string
+  imageUrl4?: string
 }
 
 type AboutModalKey = 'assessment' | 'hours' | 'manager'
@@ -169,6 +175,11 @@ type AboutModalState = {
   imageUrl?: string
 }
 
+type ImageLightboxState = {
+  src: string
+  alt: string
+}
+
 type MediaAssetItem = {
   mediaType: string
   title: string
@@ -180,7 +191,7 @@ type MediaAssetItem = {
 const defaultAboutContent: AboutContentState = {
   title: '專門為高齡犬與需要安靜休養的毛孩，留一個更溫柔的空間',
   content:
-    '當毛孩年輕時，活潑、奔跑、充滿活力。但當牠們慢慢變老，腳步變慢、需要更多休息與照顧時，許多飼主也會跟著感到不安與焦慮。\n\n恆寵愛 Perpetuity 的成立，是希望提供一個更溫柔的選擇。\n\n我們理解那份心情，因此選擇提供更安靜、更細心、更理解高齡毛孩需求的環境，也希望分享高齡犬照顧的經驗與知識，陪伴飼主走過生命的每個階段。',
+      '當毛孩年輕時，活潑、奔跑、充滿活力。但當牠們慢慢變老，腳步變慢、需要更多休息與照顧時，許多飼主也會跟著感到不安與焦慮。\n\n恆寵愛 Perpetuity 的成立，是希望提供一個更溫柔的選擇。\n\n我們理解那份心情，因此選擇提供更安靜、更細心、更理解高齡毛孩需求的環境，也希望分享高齡犬照顧的經驗與知識，陪伴飼主走過生命的每個階段。',
 }
 
 const defaultAboutModals: AboutModalState[] = [
@@ -188,7 +199,7 @@ const defaultAboutModals: AboutModalState[] = [
     modalKey: 'daycare_assessment',
     title: '入住前安親評估',
     content:
-      '入住前會先了解毛孩的作息、飲食習慣、身體狀況與照護需求，協助牠用更低壓的方式熟悉環境，也讓飼主更放心安排後續住宿。',
+        '入住前會先了解毛孩的作息、飲食習慣、身體狀況與照護需求，協助牠用更低壓的方式熟悉環境，也讓飼主更放心安排後續住宿。',
   },
   {
     modalKey: 'hours',
@@ -199,18 +210,18 @@ const defaultAboutModals: AboutModalState[] = [
     modalKey: 'manager',
     title: '店長介紹',
     content:
-      '由熟悉高齡毛孩照護節奏的照護者陪伴，依照每隻毛孩的個性、體力與生活習慣調整互動方式，讓住宿不只是安置，而是安心的照顧延續。',
+        '由熟悉高齡毛孩照護節奏的照護者陪伴，依照每隻毛孩的個性、體力與生活習慣調整互動方式，讓住宿不只是安置，而是安心的照顧延續。',
   },
 ]
 
 const defaultStoreInfo: StoreInfo = {
   storeName: '恆寵愛 Perpetuity',
-  phone: '02 8791 7135',
-  address: '台北市萬華區（預約後提供）',
+  phone: '0975 042 602',
+  address: '台北市萬華區中華路一段182號6樓之一（全預約制）',
   businessHours: '每日 09:30 - 21:30（全年無休）',
-  lineUrl: 'https://www.line.me/tw/',
-  igUrl: 'https://www.instagram.com/',
-  fbUrl: 'https://www.facebook.com/',
+  lineUrl: 'https://line.me/R/ti/p/@803krxia',
+  igUrl: 'https://www.instagram.com/perpetuity.petcare',
+  fbUrl: 'https://www.facebook.com/people/%E6%81%86%E5%AF%B5%E6%84%9B-%E5%AF%B5%E7%89%A9%E7%85%A7%E9%A1%A7/100025077620967/?sk=grid',
   mapUrl: '',
 }
 
@@ -234,6 +245,7 @@ const defaultArticleShare: ArticleShareItem[] = [
 
 const mobileOpen = ref(false)
 const activeAboutModal = ref<AboutModalKey | null>(null)
+const imageLightbox = ref<ImageLightboxState | null>(null)
 const loadingNews = ref(false)
 const newsError = ref('')
 const latestNews = ref<NewsItem[]>([])
@@ -251,10 +263,10 @@ const aboutModals = ref<AboutModalState[]>(defaultAboutModals)
 const resolveAppAssetUrl = (path: string): string => new URL(path, window.location.href).toString()
 
 const inferredApiBaseUrl = import.meta.env.DEV
-  ? '/api'
-  : window.location.pathname.includes('/frontend/')
-    ? new URL('../../backend/public/api/', window.location.href).toString().replace(/\/$/, '')
-    : `${window.location.origin}/api`
+    ? '/api'
+    : window.location.pathname.includes('/frontend/')
+        ? new URL('../../backend/public/api/', window.location.href).toString().replace(/\/$/, '')
+        : `${window.location.origin}/api`
 
 const apiBaseUrl =
     import.meta.env.VITE_API_BASE_URL ||
@@ -309,12 +321,12 @@ const parseTagList = (raw?: string): string[] => {
   }
 
   return Array.from(
-    new Set(
-      value
-        .split(/[\n,，、/|]+/)
-        .map((item) => item.trim().replace(/^#/, ''))
-        .filter(Boolean),
-    ),
+      new Set(
+          value
+              .split(/[\n,，、/|]+/)
+              .map((item) => item.trim().replace(/^#/, ''))
+              .filter(Boolean),
+      ),
   )
 }
 
@@ -331,16 +343,6 @@ const normalizeSection = (item: ApiSection): ContentSection | undefined => {
   }
 }
 
-const normalizeStoreInfo = (data?: ApiStoreInfo): StoreInfo => ({
-  storeName: cleanText(data?.store_name) || defaultStoreInfo.storeName,
-  phone: cleanText(data?.phone) || defaultStoreInfo.phone,
-  address: cleanText(data?.address) || defaultStoreInfo.address,
-  businessHours: cleanText(data?.business_hours) || defaultStoreInfo.businessHours,
-  lineUrl: cleanText(data?.line_url) || defaultStoreInfo.lineUrl,
-  igUrl: cleanText(data?.ig_url) || defaultStoreInfo.igUrl,
-  fbUrl: cleanText(data?.fb_url) || defaultStoreInfo.fbUrl,
-  mapUrl: cleanText(data?.map_url) || defaultStoreInfo.mapUrl,
-})
 
 const normalizeExternalLink = (item: ApiExternalLink): ExternalLinkItem | undefined => {
   const platform = cleanText(item.platform).toLowerCase()
@@ -410,18 +412,31 @@ const getPlatformUrl = (platforms: string[], fallback: string): string => {
   return fallback
 }
 
+const normalizeStoreInfo = (data?: ApiStoreInfo): StoreInfo => ({
+  storeName: cleanText(data?.store_name) || defaultStoreInfo.storeName,
+  phone: cleanText(data?.phone) || defaultStoreInfo.phone,
+  address: cleanText(data?.address) || defaultStoreInfo.address,
+  businessHours: cleanText(data?.business_hours) || defaultStoreInfo.businessHours,
+  lineUrl: cleanText(data?.line_url) || defaultStoreInfo.lineUrl,
+  igUrl: cleanText(data?.ig_url) || defaultStoreInfo.igUrl,
+  fbUrl: cleanText(data?.fb_url) || defaultStoreInfo.fbUrl,
+  mapUrl: cleanText(data?.map_url) || defaultStoreInfo.mapUrl,
+})
+
 const defaultHeroTitle = '恆寵愛｜Perpetuity'
-const defaultHeroDescription = '長久陪伴、永恆的愛。為高齡犬與需要安靜休養的毛孩，打造低刺激、好休息、可安心託付的日常照護空間。'
+const defaultHeroDescription = '長久陪伴、永恆的愛。\n為高齡犬與需要安靜休養的毛孩，打造低刺激、好休息、可安心託付的日常照護空間。'
 const defaultHeroImage = resolveAppAssetUrl('hero-main.jpg')
-const mapImageUrl = resolveAppAssetUrl('map.png')
+const assessmentLineUrl = 'https://lin.ee/m6x0nQT'
+const googleMapEmbedUrl =
+    'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3614.8583786208014!2d121.50430347652939!3d25.038879777813158!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3442a9a7693d18b3%3A0x7d52e084ff682be6!2zMTAw6Ie65YyX5biC5Lit5q2j5Y2A5Lit6I-v6Lev5LiA5q61MTgy6Jmf!5e0!3m2!1szh-TW!2stw!4v1774365717119!5m2!1szh-TW!2stw'
 
 const getHeroImageFromMedia = (): string | undefined => {
   const activeMedia = mediaAssets.value
-    .filter((item) => item.isActive)
-    .sort((left, right) => left.sortOrder - right.sortOrder)
+      .filter((item) => item.isActive)
+      .sort((left, right) => left.sortOrder - right.sortOrder)
 
   const preferred = activeMedia.find((item) => item.mediaType === 'poster')
-    || activeMedia.find((item) => item.mediaType === 'image')
+      || activeMedia.find((item) => item.mediaType === 'image')
 
   return resolveMediaUrl(preferred?.filePath)
 }
@@ -429,22 +444,43 @@ const getHeroImageFromMedia = (): string | undefined => {
 const heroTitle = computed(() => getSectionTitle(['hero_title', 'hero'], defaultHeroTitle))
 
 const heroDescription = computed(() =>
-  getSectionContent(['hero_subtitle', 'hero_content'], getSectionContent(['hero'], defaultHeroDescription)) || defaultHeroDescription,
+    getSectionContent(['hero_subtitle', 'hero_content'], getSectionContent(['hero'], defaultHeroDescription)) || defaultHeroDescription,
 )
 
 const heroImageUrl = computed(() =>
-  getSectionImageUrl(['hero_visual', 'hero_image', 'hero_cover']) || getHeroImageFromMedia() || defaultHeroImage,
+    getSectionImageUrl(['hero_visual', 'hero_image', 'hero_cover']) || getHeroImageFromMedia() || defaultHeroImage,
 )
 
 const heroStyle = computed(() => ({
   backgroundImage: `linear-gradient(110deg, rgba(255,242,224,0.85), rgba(210,178,144,0.55)), url('${heroImageUrl.value}')`,
 }))
 
+// Target #11 (樂齡館主圖下方三張圖)
+const seniorGalleryImages = computed(() => {
+  return [
+    seniorContent.value.imageUrl2,
+    seniorContent.value.imageUrl3,
+    seniorContent.value.imageUrl4,
+  ].filter((url): url is string => Boolean(url))
+})
+
+const openImageLightbox = (src?: string, alt = '圖片預覽') => {
+  if (!src) {
+    return
+  }
+
+  imageLightbox.value = {src, alt}
+}
+
+const closeImageLightbox = () => {
+  imageLightbox.value = null
+}
+
 const splitParagraphs = (raw: string): string[] =>
-  raw
-    .split(/\n\s*\n+/)
-    .map((item) => item.trim())
-    .filter(Boolean)
+    raw
+        .split(/\n\s*\n+/)
+        .map((item) => item.trim())
+        .filter(Boolean)
 
 const normalizeAboutContent = (data?: ApiAboutContent): AboutContentState => ({
   title: cleanText(data?.title) || defaultAboutContent.title,
@@ -480,10 +516,13 @@ const seniorContent = ref<SeniorContent>({
   description: '以低量收托與個別照護為原則，依需求調整生活安排，協助高齡犬維持穩定、降低壓力，守住生活品質。',
   tags: ['高齡犬照護', '安靜休養', '低量收托'],
   imageUrl: 'https://images.unsplash.com/photo-1537151625747-768eb6cf92b2?auto=format&fit=crop&w=2200&q=95',
+  imageUrl2: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=800&q=80',
+  imageUrl3: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=800&q=80',
+  imageUrl4: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=800&q=80',
 })
 
-const newsApiPath = '/news'
-const seniorApiPath = '/senior-care'
+const newsApiPath = import.meta.env.VITE_NEWS_API_URL || '/api/news.php'
+const seniorApiPath = import.meta.env.VITE_SENIOR_API_URL || '/api/senior-care.php'
 
 const fallbackNews: NewsItem[] = [
   {
@@ -539,6 +578,9 @@ const normalizeSeniorContent = (data: ApiSeniorContent): SeniorContent => {
     description: data.description?.trim() || seniorContent.value.description,
     tags: parsedTags.length > 0 ? parsedTags : seniorContent.value.tags,
     imageUrl: resolveMediaUrl(data.imageUrl || data.image_url) || seniorContent.value.imageUrl,
+    imageUrl2: resolveMediaUrl(data.imageUrl2) || seniorContent.value.imageUrl2,
+    imageUrl3: resolveMediaUrl(data.imageUrl3) || seniorContent.value.imageUrl3,
+    imageUrl4: resolveMediaUrl(data.imageUrl4) || seniorContent.value.imageUrl4,
   }
 }
 
@@ -551,18 +593,18 @@ const fetchSiteContent = async () => {
     }
 
     const normalizedSections = (Array.isArray(payload.sections) ? payload.sections : [])
-      .map(normalizeSection)
-      .filter((item): item is ContentSection => Boolean(item))
+        .map(normalizeSection)
+        .filter((item): item is ContentSection => Boolean(item))
 
     mediaAssets.value = (Array.isArray(payload.media) ? payload.media : [])
-      .map(normalizeMediaAsset)
-      .filter((item): item is MediaAssetItem => Boolean(item))
+        .map(normalizeMediaAsset)
+        .filter((item): item is MediaAssetItem => Boolean(item))
 
     sectionMap.value = Object.fromEntries(normalizedSections.map((item) => [item.key, item]))
     externalLinks.value = (Array.isArray(payload.links) ? payload.links : [])
-      .map(normalizeExternalLink)
-      .filter((item): item is ExternalLinkItem => Boolean(item))
-      .sort((left, right) => left.sortOrder - right.sortOrder)
+        .map(normalizeExternalLink)
+        .filter((item): item is ExternalLinkItem => Boolean(item))
+        .sort((left, right) => left.sortOrder - right.sortOrder)
     storeInfo.value = normalizeStoreInfo(payload.store_info)
 
     if (payload.about_content) {
@@ -570,14 +612,14 @@ const fetchSiteContent = async () => {
     }
 
     const normalizedAboutModals = (Array.isArray(payload.about_modals) ? payload.about_modals : [])
-      .map(normalizeAboutModal)
-      .filter((item): item is AboutModalState => Boolean(item))
+        .map(normalizeAboutModal)
+        .filter((item): item is AboutModalState => Boolean(item))
     if (normalizedAboutModals.length > 0) {
       aboutModals.value = normalizedAboutModals
     }
 
     const normalizedArticles = (Array.isArray(payload.articles) ? payload.articles : [])
-      .map(normalizeArticleItem)
+        .map(normalizeArticleItem)
     if (normalizedArticles.length > 0) {
       articleItems.value = normalizedArticles
     }
@@ -619,8 +661,8 @@ const fetchAboutPayload = async () => {
     }
 
     const normalizedAboutModals = (Array.isArray(response.data?.modals) ? response.data.modals : [])
-      .map(normalizeAboutModal)
-      .filter((item): item is AboutModalState => Boolean(item))
+        .map(normalizeAboutModal)
+        .filter((item): item is AboutModalState => Boolean(item))
 
     if (normalizedAboutModals.length > 0) {
       aboutModals.value = normalizedAboutModals
@@ -631,7 +673,7 @@ const fetchAboutPayload = async () => {
 }
 
 const aboutTitle = computed(() =>
-  aboutContent.value.title || getSectionTitle(['about_intro', 'about'], defaultAboutContent.title),
+    aboutContent.value.title || getSectionTitle(['about_intro', 'about'], defaultAboutContent.title),
 )
 
 const aboutParagraphs = computed(() => {
@@ -641,15 +683,15 @@ const aboutParagraphs = computed(() => {
 })
 
 const aboutIntro = computed(() =>
-  aboutParagraphs.value.slice(0, 2).join('\n\n'),
+    aboutParagraphs.value.slice(0, 2).join('\n\n'),
 )
 
 const aboutSecondary = computed(() =>
-  aboutParagraphs.value.slice(2).join('\n\n') || getSectionContent(['about_secondary'], ''),
+    aboutParagraphs.value.slice(2).join('\n\n') || getSectionContent(['about_secondary'], ''),
 )
 
 const getAboutModalByKey = (modalKey: string): AboutModalState | undefined =>
-  aboutModals.value.find((item) => item.modalKey === modalKey)
+    aboutModals.value.find((item) => item.modalKey === modalKey)
 
 const aboutModalItems = computed(() => {
   const businessHours = storeInfo.value.businessHours
@@ -661,15 +703,15 @@ const aboutModalItems = computed(() => {
     {
       id: 'assessment' as const,
       icon: ShieldCheck,
-      badge: daycareAssessmentModal?.title || getSectionTitle(['about_assessment_badge'], '入住前安親評估'),
+      badge: daycareAssessmentModal?.title || getSectionTitle(['about_assessment_badge'], '入住前安全評估'),
       summary: '',
-      title: daycareAssessmentModal?.title || getSectionTitle(['about_assessment'], '入住前安親評估'),
+      title: daycareAssessmentModal?.title || getSectionTitle(['about_assessment'], '入住前安全評估'),
       content:
-        daycareAssessmentModal?.content ||
-        getSectionContent(
-          ['about_assessment'],
-          defaultAboutModals.find((item) => item.modalKey === 'daycare_assessment')?.content || '',
-        ),
+          daycareAssessmentModal?.content ||
+          getSectionContent(
+              ['about_assessment'],
+              defaultAboutModals.find((item) => item.modalKey === 'daycare_assessment')?.content || '',
+          ),
       imageUrl: daycareAssessmentModal?.imageUrl,
     },
     {
@@ -679,11 +721,11 @@ const aboutModalItems = computed(() => {
       summary: businessHours,
       title: hoursModal?.title || getSectionTitle(['about_hours'], '服務時間'),
       content:
-        hoursModal?.content ||
-        getSectionContent(
-          ['about_hours'],
-          `目前服務時間為 ${businessHours}。如需安排入住前評估、接送或特殊照護，建議先行預約，以便預留更合適的照護節奏。`,
-        ),
+          hoursModal?.content ||
+          getSectionContent(
+              ['about_hours'],
+              `目前服務時間為 ${businessHours}。如需安排入住前評估、接送或特殊照護，建議先行預約，以便預留更合適的照護節奏。`,
+          ),
       imageUrl: hoursModal?.imageUrl,
     },
     {
@@ -693,11 +735,11 @@ const aboutModalItems = computed(() => {
       summary: '',
       title: managerModal?.title || getSectionTitle(['about_manager'], '店長介紹'),
       content:
-        managerModal?.content ||
-        getSectionContent(
-          ['about_manager'],
-          defaultAboutModals.find((item) => item.modalKey === 'manager')?.content || '',
-        ),
+          managerModal?.content ||
+          getSectionContent(
+              ['about_manager'],
+              defaultAboutModals.find((item) => item.modalKey === 'manager')?.content || '',
+          ),
       imageUrl: managerModal?.imageUrl || getSectionImageUrl(['about_manager_photo']),
     },
   ]
@@ -705,13 +747,22 @@ const aboutModalItems = computed(() => {
 
 const activeAboutItem = computed(() => aboutModalItems.value.find((item) => item.id === activeAboutModal.value) || null)
 
-const articleShareHeading = computed(() => getSectionTitle(['article_share_intro', 'article_share'], '文章分享'))
+const activeAboutContentClass = computed(() =>
+    activeAboutItem.value?.id === 'hours'
+        ? 'whitespace-pre-line text-base leading-relaxed text-[#5a4c3f]'
+        : 'whitespace-pre-line text-lg leading-relaxed text-[#5a4c3f] max-md:text-base',
+)
+
+const articleShareHeading = computed(() => {
+  const title = getSectionTitle(['article_share_intro', 'article_share'], '恆寵愛日常分享')
+  return title === '文章分享' ? '恆寵愛日常分享' : title
+})
 
 const articleShareIntro = computed(() =>
-  getSectionContent(
-    ['article_share_intro', 'article_share'],
-    '整理高齡犬照護與熟齡毛孩生活節奏的分享，讓飼主在日常陪伴裡，更容易找到安心的方向。',
-  ),
+    getSectionContent(
+        ['article_share_intro', 'article_share'],
+        '整理高齡犬照護與熟齡毛孩生活節奏的分享，讓飼主在日常陪伴裡，更容易找到安心的方向。',
+    ),
 )
 
 const articleShareItems = computed<ArticleShareItem[]>(() => {
@@ -720,12 +771,12 @@ const articleShareItems = computed<ArticleShareItem[]>(() => {
   }
 
   const dynamicItems = [1, 2, 3]
-    .map((index) => ({
-      id: `article-${index}`,
-      title: getSectionTitle([`article_share_${index}`], ''),
-      excerpt: getSectionContent([`article_share_${index}`], ''),
-    }))
-    .filter((item) => item.title !== '' && item.excerpt !== '')
+      .map((index) => ({
+        id: `article-${index}`,
+        title: getSectionTitle([`article_share_${index}`], ''),
+        excerpt: getSectionContent([`article_share_${index}`], ''),
+      }))
+      .filter((item) => item.title !== '' && item.excerpt !== '')
 
   return dynamicItems.length > 0 ? dynamicItems : defaultArticleShare
 })
@@ -751,7 +802,14 @@ const socialLinks = computed(() => [
   },
 ].filter((item) => item.url !== ''))
 
-const contactMapUrl = computed(() => getPlatformUrl(['map', 'google-map', 'google_maps'], storeInfo.value.mapUrl))
+const mapEmbedSrc = computed(() => {
+  const mapUrl = getPlatformUrl(['map', 'google-map', 'google_maps'], storeInfo.value.mapUrl)
+  if (mapUrl.includes('google.com/maps/embed')) {
+    return mapUrl
+  }
+
+  return googleMapEmbedUrl
+})
 
 const fetchSeniorContent = async () => {
   loadingSenior.value = true
@@ -784,7 +842,7 @@ onMounted(async () => {
           class="relative mx-auto grid min-h-20 w-[min(1200px,calc(100%-2rem))] grid-cols-[1fr_auto_1fr] items-center gap-4">
         <a href="#home"
            class="col-start-2 inline-flex items-center justify-self-center gap-2 text-lg font-semibold tracking-wide text-[#3e3329]">
-          <img src="/logo.jpg" alt="恆寵愛 Logo" class="h-9 w-9 rounded-full border border-[#d2bda0] object-cover"/>
+          <img src="/logo.jpg?v=1" alt="恆寵愛 Logo" class="h-9 w-9 rounded-full border border-[#d2bda0] object-cover"/>
           <span>{{ storeInfo.storeName }}</span>
         </a>
 
@@ -819,7 +877,8 @@ onMounted(async () => {
             ? 'pointer-events-auto max-h-80 translate-y-0 scale-100 opacity-100'
             : 'pointer-events-none max-h-0 -translate-y-2 scale-95 border-transparent opacity-0'"
         >
-          <div class="flex flex-col items-start gap-2 bg-[#f4e8d8bf] p-3 backdrop-blur-sm supports-[backdrop-filter]:bg-[#f4e8d8b3]">
+          <div
+              class="flex flex-col items-start gap-2 bg-[#f4e8d8bf] p-3 backdrop-blur-sm supports-[backdrop-filter]:bg-[#f4e8d8b3]">
             <a
                 href="#about"
                 class="relative w-full overflow-hidden rounded-md px-4 py-2.5 text-center text-base font-semibold text-[#4a3f35] transition duration-200 hover:-translate-y-0.5 hover:bg-[#f0ddc1] hover:text-[#5a402a] hover:shadow-[0_8px_18px_rgba(85,58,34,0.18)] after:content-[''] after:absolute after:left-4 after:right-4 after:bottom-1.5 after:h-[2px] after:origin-center after:scale-x-0 after:rounded-full after:bg-[linear-gradient(90deg,#b18053,#d9ab7e)] after:transition-transform after:duration-300 hover:after:scale-x-100"
@@ -836,13 +895,13 @@ onMounted(async () => {
                 href="#articles"
                 class="relative w-full overflow-hidden rounded-md px-4 py-2.5 text-center text-base font-semibold text-[#4a3f35] transition duration-200 hover:-translate-y-0.5 hover:bg-[#f0ddc1] hover:text-[#5a402a] hover:shadow-[0_8px_18px_rgba(85,58,34,0.18)] after:content-[''] after:absolute after:left-4 after:right-4 after:bottom-1.5 after:h-[2px] after:origin-center after:scale-x-0 after:rounded-full after:bg-[linear-gradient(90deg,#b18053,#d9ab7e)] after:transition-transform after:duration-300 hover:after:scale-x-100"
                 @click="mobileOpen = false"
-            >文章分享</a
+            >恆寵愛日常分享</a
             >
             <a
                 href="#senior"
                 class="relative w-full overflow-hidden rounded-md px-4 py-2.5 text-center text-base font-semibold text-[#4a3f35] transition duration-200 hover:-translate-y-0.5 hover:bg-[#f0ddc1] hover:text-[#5a402a] hover:shadow-[0_8px_18px_rgba(85,58,34,0.18)] after:content-[''] after:absolute after:left-4 after:right-4 after:bottom-1.5 after:h-[2px] after:origin-center after:scale-x-0 after:rounded-full after:bg-[linear-gradient(90deg,#b18053,#d9ab7e)] after:transition-transform after:duration-300 hover:after:scale-x-100"
                 @click="mobileOpen = false"
-            >樂齡館</a
+            >規範須知</a
             >
             <a
                 href="#contact"
@@ -858,15 +917,15 @@ onMounted(async () => {
     <main class="mx-auto w-[min(1200px,calc(100%-2rem))] py-5">
       <section
           id="home"
-          class="grid min-h-[620px] content-center justify-items-center gap-5 rounded-[22px] border border-[#d8c2a6]
-         bg-cover bg-center px-10 py-16 text-center shadow-[0_24px_44px_rgba(35,23,15,0.18)] max-md:min-h-[440px] max-md:px-5 max-md:py-10"
+          class="grid aspect-square min-h-0 content-center justify-items-center gap-5 rounded-[22px] border border-[#d8c2a6]
+         bg-cover bg-center px-5 py-8 text-center shadow-[0_24px_44px_rgba(35,23,15,0.18)] sm:aspect-auto sm:min-h-[480px] sm:px-10 sm:py-14 lg:min-h-[50vh]"
           :style="heroStyle"
       >
-        <p class="text-xs font-bold uppercase tracking-[0.15em] text-[#856246]">Taipei Wanhua Senior Pet Club</p>
-        <h1 class="max-w-[960px] text-6xl leading-[1.02] text-[#2d241c] max-md:text-[2.4rem]">
+        <p class="text-sm font-bold uppercase tracking-[0.16em] text-[#856246] md:text-base">TAIPEI PET CARE CENTER</p>
+        <h1 class="max-w-[960px] break-words text-6xl leading-[1.02] text-[#2d241c] max-md:text-[2.2rem]">
           {{ heroTitle }}
         </h1>
-        <p class="max-w-[760px] text-lg leading-relaxed text-[#5b4a3b] max-md:text-base">
+        <p class="max-w-[760px] whitespace-pre-line break-words text-lg leading-relaxed text-[#5b4a3b] max-md:text-base">
           {{ heroDescription }}
         </p>
       </section>
@@ -874,12 +933,12 @@ onMounted(async () => {
       <section id="about"
                class="mt-5 rounded-2xl border border-[#ccb392] bg-[#fff8eee8] p-8 shadow-[0_20px_36px_rgba(35,23,15,0.14)] backdrop-blur-sm max-md:p-6">
         <div>
-          <p class="text-xs font-bold uppercase tracking-[0.12em] text-[#8a6a4c]">關於恆寵愛</p>
-          <h2 class="mt-1 text-[clamp(2rem,3.2vw,3rem)] text-[#2d241c]">{{ aboutTitle }}</h2>
-          <p class="mt-4 whitespace-pre-line text-lg leading-relaxed text-[#5a4c3f] max-md:text-base">
+          <p class="text-sm font-bold uppercase tracking-[0.14em] text-[#8a6a4c] md:text-base">關於恆寵愛</p>
+          <h2 class="mt-1 text-[clamp(2.3rem,3.8vw,3.6rem)] text-[#2d241c]">{{ aboutTitle }}</h2>
+          <p class="mt-4 whitespace-pre-line text-xl leading-relaxed text-[#5a4c3f] max-md:text-lg">
             {{ aboutIntro }}
           </p>
-          <p class="mt-4 whitespace-pre-line text-lg text-[#4f4236] max-md:text-base">
+          <p class="mt-4 whitespace-pre-line text-xl text-[#4f4236] max-md:text-lg">
             {{ aboutSecondary }}
           </p>
           <div class="mt-4 flex flex-wrap gap-3">
@@ -905,7 +964,7 @@ onMounted(async () => {
       <section id="news"
                class="mt-5 rounded-2xl border border-[#ccb392] bg-[#fff8eee8] p-8 shadow-[0_20px_36px_rgba(35,23,15,0.14)] backdrop-blur-sm max-md:p-6">
         <div>
-          <p class="text-xs font-bold uppercase tracking-[0.12em] text-[#8a6a4c]">最新消息</p>
+          <p class="text-lg font-bold uppercase tracking-[0.14em] text-[#8a6a4c] md:text-base">最新消息</p>
         </div>
 
         <p v-if="loadingNews" class="mt-3 text-[#5a4c3f]">載入最新消息中...</p>
@@ -917,13 +976,21 @@ onMounted(async () => {
               :key="item.id"
               class="group grid gap-4 rounded-xl border border-[#d8c2a6] bg-gradient-to-br from-[#fffdf9] to-[#fff4e2] p-5 transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_28px_rgba(90,63,35,0.16)] md:grid-cols-2 md:items-stretch"
           >
-            <img
+            <button
                 v-if="item.imageUrl"
-                :src="item.imageUrl"
-                :alt="`${item.title} 圖片`"
-                class="h-auto max-h-[72vh] w-full rounded-lg bg-[#f6eadc] object-contain p-2 transition duration-300"
+                type="button"
+                class="group/image relative w-full overflow-hidden rounded-lg"
                 :class="index % 2 === 0 ? 'md:order-1' : 'md:order-2'"
-            />
+                @click="openImageLightbox(item.imageUrl, `${item.title} 圖片`)"
+            >
+              <img
+                  :src="item.imageUrl"
+                  :alt="`${item.title} 圖片`"
+                  loading="lazy"
+                  decoding="async"
+                  class="h-auto max-h-[72vh] w-full rounded-lg bg-[#f6eadc] object-contain p-2 transition duration-300"
+              />
+            </button>
             <div
                 class="flex flex-col gap-3"
                 :class="[
@@ -934,8 +1001,8 @@ onMounted(async () => {
                 <CalendarDays :size="15"/>
                 <span>{{ item.publishedAt }}</span>
               </div>
-              <h3 class="text-3xl leading-tight text-[#2f271f] max-md:text-2xl">{{ item.title }}</h3>
-              <p class="whitespace-pre-line text-lg text-[#5a4c3f] max-md:text-base">{{ item.excerpt }}</p>
+              <h3 class="text-3xl leading-tight text-[#2f271f] max-md:text-2xl lg:text-4xl">{{ item.title }}</h3>
+              <p class="whitespace-pre-line text-lg text-[#5a4c3f] max-md:text-base lg:text-xl">{{ item.excerpt }}</p>
               <a
                   v-if="item.link"
                   :href="item.link"
@@ -953,18 +1020,21 @@ onMounted(async () => {
 
       <section
           id="senior"
-          class="mt-5 grid items-center gap-5 rounded-2xl border border-[#ccb392] bg-[#fff8eee8] p-8 shadow-[0_20px_36px_rgba(35,23,15,0.14)] backdrop-blur-sm md:grid-cols-[1.25fr_1.05fr] max-md:p-6"
+          class="mt-5 grid items-start gap-5 rounded-2xl border border-[#ccb392] bg-[#fff8eee8] p-8 shadow-[0_20px_36px_rgba(35,23,15,0.14)] backdrop-blur-sm md:grid-cols-[1.25fr_1.05fr] max-md:p-6"
       >
-        <div>
+        <div class="self-start">
           <div>
-            <p class="text-xs font-bold uppercase tracking-[0.12em] text-[#8a6a4c]">{{ seniorContent.title }}</p>
-            <h2 class="mt-1 whitespace-pre-line text-[clamp(2rem,3.2vw,3rem)] text-[#2d241c]">{{ seniorContent.subtitle }}</h2>
+            <p class="text-lg font-bold uppercase tracking-[0.14em] text-[#8a6a4c] md:text-base">規範須知</p>
+            <h2 class="mt-1 whitespace-pre-line text-[clamp(2rem,3.2vw,3rem)] text-[#2d241c]">{{
+                seniorContent.subtitle
+              }}</h2>
           </div>
           <p v-if="loadingSenior" class="mt-3 text-[#5a4c3f]">載入樂齡館資料中...</p>
           <p v-else-if="seniorError" class="mt-3 text-[#8d5d37]">{{ seniorError }}</p>
-          <p class="mt-4 whitespace-pre-line text-lg leading-relaxed text-[#5a4c3f] max-md:text-base">{{ seniorContent.description }}</p>
+          <p class="mt-4 whitespace-pre-line text-lg leading-relaxed text-[#5a4c3f] max-md:text-base">
+            {{ seniorContent.description }}</p>
           <div class="mt-4">
-<!--            <p class="text-sm font-bold uppercase tracking-[0.14em] text-[#8a6a4c]">#tags</p>-->
+            <!--            <p class="text-sm font-bold uppercase tracking-[0.14em] text-[#8a6a4c]">#tags</p>-->
             <div class="mt-2 flex flex-wrap gap-2">
               <span
                   v-for="tag in seniorContent.tags"
@@ -974,18 +1044,36 @@ onMounted(async () => {
             </div>
           </div>
         </div>
-        <img
-            :src="seniorContent.imageUrl"
-            :alt="`${seniorContent.title} 圖片`"
-            class="h-full min-h-[420px] w-full rounded-xl object-cover contrast-105 saturate-110 transition duration-500 hover:scale-[1.03]"
-        />
+        <button
+            type="button"
+            class="group/image relative overflow-hidden rounded-xl"
+            @click="openImageLightbox(seniorContent.imageUrl, `${seniorContent.title} 主圖`)"
+        >
+          <img
+              :src="seniorContent.imageUrl"
+              :alt="`${seniorContent.title} 圖片`"
+              loading="lazy"
+              decoding="async"
+              class="h-full min-h-[420px] w-full rounded-xl object-contain contrast-105 saturate-110 transition duration-500 group-hover/image:scale-[1.03]"
+          />
+        </button>
+        
+        <!-- Target #11 (樂齡館主圖下方三張圖) -->
+        <div v-if="seniorGalleryImages.length > 0" class="mt-2 grid grid-cols-3 gap-4 md:col-span-2">
+           <button v-for="(img, idx) in seniorGalleryImages" :key="idx" type="button" class="group/gallery relative aspect-[3/2] md:aspect-auto md:h-64 overflow-hidden rounded-xl border border-[#e2d5c1]" @click="openImageLightbox(img, '樂齡館展示圖片')">
+              <img :src="img" :alt="`樂齡館展示圖片 ${idx + 1}`" loading="lazy" decoding="async" class="h-full w-full object-contain transition duration-300 group-hover/gallery:scale-[1.03]" />
+           </button>
+        </div>
       </section>
 
       <section id="articles"
                class="mt-5 rounded-2xl border border-[#ccb392] bg-[#fff8eee8] p-8 shadow-[0_20px_36px_rgba(35,23,15,0.14)] backdrop-blur-sm max-md:p-6">
         <div>
-          <p class="text-xs font-bold uppercase tracking-[0.12em] text-[#8a6a4c]">{{ articleShareHeading }}</p>
-          <p class="mt-3 whitespace-pre-line text-lg leading-relaxed text-[#5a4c3f] max-md:text-base">{{ articleShareIntro }}</p>
+          <p class="text-lg font-bold uppercase tracking-[0.14em] text-[#8a6a4c] md:text-base">{{
+              articleShareHeading
+            }}</p>
+          <p class="mt-3 whitespace-pre-line text-lg leading-relaxed text-[#5a4c3f] max-md:text-base">
+            {{ articleShareIntro }}</p>
         </div>
         <p v-if="articleError" class="mt-3 text-[#8d5d37]">{{ articleError }}</p>
         <div class="mt-5 flex flex-col gap-4">
@@ -994,20 +1082,28 @@ onMounted(async () => {
               :key="item.id"
               class="group grid gap-4 rounded-xl border border-[#d8c2a6] bg-gradient-to-br from-[#fffdf9] to-[#fff4e2] p-5 transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_28px_rgba(90,63,35,0.16)] md:grid-cols-2 md:items-stretch"
           >
-            <img
+            <button
                 v-if="item.imageUrl"
-                :src="item.imageUrl"
-                :alt="`${item.title} 圖片`"
-                class="h-auto max-h-[72vh] w-full rounded-lg bg-[#f6eadc] object-contain p-2 transition duration-300"
+                type="button"
+                class="group/image relative w-full overflow-hidden rounded-lg"
                 :class="index % 2 === 0 ? 'md:order-1' : 'md:order-2'"
-            />
+                @click="openImageLightbox(item.imageUrl, `${item.title} 圖片`)"
+            >
+              <img
+                  :src="item.imageUrl"
+                  :alt="`${item.title} 圖片`"
+                  loading="lazy"
+                  decoding="async"
+                  class="h-auto max-h-[72vh] w-full rounded-lg bg-[#f6eadc] object-contain p-2 transition duration-300"
+              />
+            </button>
             <div
                 class="flex flex-col gap-3"
                 :class="[
                   item.imageUrl ? (index % 2 === 0 ? 'md:order-2' : 'md:order-1') : 'md:col-span-2',
                 ]"
             >
-              <p class="text-xs font-bold uppercase tracking-[0.14em] text-[#8a6a4c]">Article Share</p>
+              <p class="text-sm font-bold uppercase tracking-[0.14em] text-[#8a6a4c] md:text-base">Article Share</p>
               <div v-if="item.publishedAt" class="inline-flex items-center gap-1.5 text-sm text-[#80664e]">
                 <CalendarDays :size="15"/>
                 <span>{{ item.publishedAt.slice(0, 10) }}</span>
@@ -1036,15 +1132,21 @@ onMounted(async () => {
       >
         <div>
           <h3 class="text-3xl text-[#fff9ef]">聯絡我們</h3>
-          <p class="mt-2 inline-flex items-center gap-1.5">
-            <MapPin :size="15"/>
+          <p class="mt-2 flex flex-col items-start gap-1">
+            <span class="inline-flex items-center gap-1.5 text-[#e8dccf] text-2xl">
+              <MapPin :size="15"/>
+              <span>地址</span>
+            </span>
             <span class="whitespace-pre-line">{{ storeInfo.address }}</span>
           </p>
-          <p class="mt-2 inline-flex items-center gap-1.5">
-            <Phone :size="15"/>
+          <p class="mt-2 flex flex-col items-start gap-1">
+            <span class="inline-flex items-center gap-1.5 text-[#e8dccf] text-2xl">
+              <Phone :size="15"/>
+              <span>電話</span>
+            </span>
             <span>{{ storeInfo.phone }}</span>
           </p>
-          <p class="mt-2 inline-flex items-center gap-1.5">
+          <p class="mt-2 inline-flex items-center gap-1.5 text-2xl">
             <Clock3 :size="15"/>
             <span class="whitespace-pre-line">{{ storeInfo.businessHours }}</span>
           </p>
@@ -1063,19 +1165,11 @@ onMounted(async () => {
             </a>
           </div>
         </div>
-        <a
-            v-if="contactMapUrl"
-            :href="contactMapUrl"
-            class="overflow-hidden rounded-xl border border-white/20 bg-white/10"
-            target="_blank"
-            rel="noopener noreferrer"
-        >
-          <img :src="mapImageUrl" alt="恆寵愛位置地圖"
-               class="h-full min-h-[320px] w-full object-cover transition duration-500 hover:scale-[1.03]"/>
-        </a>
-        <div v-else class="overflow-hidden rounded-xl border border-white/20 bg-white/10">
-          <img :src="mapImageUrl" alt="恆寵愛位置地圖"
-               class="h-full min-h-[320px] w-full object-cover transition duration-500 hover:scale-[1.03]"/>
+        <div class="overflow-hidden rounded-xl border border-white/20 bg-white/10">
+          <iframe
+              :src="mapEmbedSrc"
+              width="600" height="450" style="border:0;" allowfullscreen loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
       </div>
     </footer>
@@ -1103,11 +1197,13 @@ onMounted(async () => {
               leave-from-class="translate-y-0 scale-100 opacity-100"
               leave-to-class="translate-y-3 scale-95 opacity-0"
           >
-            <div v-if="activeAboutItem" class="max-h-[calc(100vh-3rem)] w-full max-w-[900px] overflow-y-auto rounded-[28px] border border-[#d9c3a8] bg-[#fff8eee8] p-6 shadow-[0_28px_48px_rgba(26,18,12,0.22)] backdrop-blur-md max-md:p-5">
+            <div v-if="activeAboutItem"
+                 class="max-h-[calc(100vh-3rem)] w-full max-w-[980px] overflow-y-auto rounded-[28px] border border-[#d9c3a8] bg-[#fff8eee8] p-6 shadow-[0_28px_48px_rgba(26,18,12,0.22)] backdrop-blur-md max-md:p-5">
               <div class="flex items-start justify-between gap-4">
                 <div>
-                  <p class="text-xs font-bold uppercase tracking-[0.14em] text-[#8a6a4c]">關於恆寵愛</p>
-                  <h3 class="mt-2 text-[2.2rem] leading-tight text-[#2d241c] max-md:text-[1.8rem]">{{ activeAboutItem.title }}</h3>
+                  <p class="text-sm font-bold uppercase tracking-[0.14em] text-[#8a6a4c] md:text-base">關於恆寵愛</p>
+                  <p class="mt-2 text-[2.2rem] leading-tight text-[#2d241c] max-md:text-[1.8rem]">
+                    {{ activeAboutItem.title }}</p>
                 </div>
                 <button
                     type="button"
@@ -1118,17 +1214,68 @@ onMounted(async () => {
                   <X :size="18"/>
                 </button>
               </div>
-              <img
-                  v-if="activeAboutItem.imageUrl"
-                  :src="activeAboutItem.imageUrl"
-                  :alt="`${activeAboutItem.title} 圖片`"
-                  class="mt-5 max-h-[75vh] w-full rounded-[22px] bg-[#f6eadc] object-contain p-2"
-              />
-              <p class="mt-5 whitespace-pre-line text-lg leading-relaxed text-[#5a4c3f] max-md:text-base">
-                {{ activeAboutItem.content }}
-              </p>
+              <div
+                  class="mt-5"
+                  :class="activeAboutItem.imageUrl ? 'grid gap-5 md:grid-cols-[1.05fr_1fr] md:items-start' : ''"
+              >
+                <img
+                    v-if="activeAboutItem.imageUrl"
+                    :src="activeAboutItem.imageUrl"
+                    :alt="`${activeAboutItem.title} 圖片`"
+                    loading="lazy"
+                    decoding="async"
+                    class="max-h-[75vh] w-full rounded-[22px] bg-[#f6eadc] object-contain p-2"
+                />
+                <div>
+                  <p :class="activeAboutContentClass">
+                    {{ activeAboutItem.content }}
+                  </p>
+                  <a
+                      v-if="activeAboutItem.id === 'assessment'"
+                      :href="assessmentLineUrl"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="mt-4 inline-flex items-center gap-1.5 rounded-md border border-[#d6b895] bg-[#f3e4cf] px-3 py-2 text-sm font-semibold text-[#5a412b]"
+                  >
+                    <span>入住前安全評估</span>
+                    <ExternalLink :size="14"/>
+                  </a>
+                </div>
+              </div>
             </div>
           </Transition>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <Teleport to="body">
+      <Transition
+          enter-active-class="transition duration-300 ease-out"
+          enter-from-class="opacity-0"
+          enter-to-class="opacity-100"
+          leave-active-class="transition duration-200 ease-in"
+          leave-from-class="opacity-100"
+          leave-to-class="opacity-0"
+      >
+        <div
+            v-if="imageLightbox"
+            class="fixed inset-0 z-[90] flex items-center justify-center bg-[#1d160f]/80 px-4 py-6"
+            @click.self="closeImageLightbox"
+        >
+          <button
+              type="button"
+              class="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#dcc7ad] bg-[#fff8eedb] text-[#5c4738] transition hover:bg-[#f1dfc8]"
+              @click="closeImageLightbox"
+              aria-label="關閉圖片預覽"
+          >
+            <X :size="18"/>
+          </button>
+          <img
+              :src="imageLightbox.src"
+              :alt="imageLightbox.alt"
+              decoding="async"
+              class="max-h-[88vh] max-w-[92vw] rounded-2xl bg-[#f6eadc] object-contain p-2 shadow-[0_24px_40px_rgba(0,0,0,0.35)]"
+          />
         </div>
       </Transition>
     </Teleport>

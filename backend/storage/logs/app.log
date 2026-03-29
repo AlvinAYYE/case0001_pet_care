@@ -1,0 +1,42 @@
+[2026-03-28T23:47:21+08:00] read.content.store-info: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'store_name' in 'field list' in C:\xampp\htdocs\case0001_20260301\backend\src\ContentRepository.php:161
+#0 C:\xampp\htdocs\case0001_20260301\backend\src\ContentRepository.php(161): PDO->query('SELECT id, stor...')
+#1 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(135): ContentRepository->getStoreInfo()
+#2 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(57): {closure}()
+#3 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(135): {closure}(Object(Closure), Array, 'read.content.st...')
+#4 {main}
+[2026-03-28T23:47:21+08:00] read.content.senior-care: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'image_url_2' in 'field list' in C:\xampp\htdocs\case0001_20260301\backend\src\ContentRepository.php:408
+#0 C:\xampp\htdocs\case0001_20260301\backend\src\ContentRepository.php(408): PDO->query('SELECT id, titl...')
+#1 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(139): ContentRepository->getSeniorCareContent()
+#2 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(57): {closure}()
+#3 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(139): {closure}(Object(Closure), Array, 'read.content.se...')
+#4 {main}
+[2026-03-28T23:47:21+08:00] read.senior-care: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'image_url_2' in 'field list' in C:\xampp\htdocs\case0001_20260301\backend\src\ContentRepository.php:408
+#0 C:\xampp\htdocs\case0001_20260301\backend\src\ContentRepository.php(408): PDO->query('SELECT id, titl...')
+#1 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(118): ContentRepository->getSeniorCareContent()
+#2 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(57): {closure}()
+#3 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(118): {closure}(Object(Closure), Array, 'read.senior-car...')
+#4 {main}
+[2026-03-28T23:59:27+08:00] read.content.store-info: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'store_name' in 'field list' in C:\xampp\htdocs\case0001_20260301\backend\src\ContentRepository.php:161
+#0 C:\xampp\htdocs\case0001_20260301\backend\src\ContentRepository.php(161): PDO->query('SELECT id, stor...')
+#1 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(135): ContentRepository->getStoreInfo()
+#2 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(57): {closure}()
+#3 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(135): {closure}(Object(Closure), Array, 'read.content.st...')
+#4 {main}
+[2026-03-28T23:59:27+08:00] read.content.senior-care: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'image_url_2' in 'field list' in C:\xampp\htdocs\case0001_20260301\backend\src\ContentRepository.php:408
+#0 C:\xampp\htdocs\case0001_20260301\backend\src\ContentRepository.php(408): PDO->query('SELECT id, titl...')
+#1 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(139): ContentRepository->getSeniorCareContent()
+#2 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(57): {closure}()
+#3 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(139): {closure}(Object(Closure), Array, 'read.content.se...')
+#4 {main}
+[2026-03-28T23:59:27+08:00] read.senior-care: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'image_url_2' in 'field list' in C:\xampp\htdocs\case0001_20260301\backend\src\ContentRepository.php:408
+#0 C:\xampp\htdocs\case0001_20260301\backend\src\ContentRepository.php(408): PDO->query('SELECT id, titl...')
+#1 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(118): ContentRepository->getSeniorCareContent()
+#2 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(57): {closure}()
+#3 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(118): {closure}(Object(Closure), Array, 'read.senior-car...')
+#4 {main}
+[2026-03-29T20:44:28+08:00] read.content.senior-care: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'image_url_2' in 'field list' in C:\xampp\htdocs\case0001_20260301\backend\src\ContentRepository.php:394
+#0 C:\xampp\htdocs\case0001_20260301\backend\src\ContentRepository.php(394): PDO->query('SELECT id, titl...')
+#1 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(139): ContentRepository->getSeniorCareContent()
+#2 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(57): {closure}()
+#3 C:\xampp\htdocs\case0001_20260301\backend\public\index.php(139): {closure}(Object(Closure), Array, 'read.content.se...')
+#4 {main}

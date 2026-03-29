@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../src/Env.php';
 require_once __DIR__ . '/../../src/Database.php';
 require_once __DIR__ . '/../../src/ContentRepository.php';
+require_once __DIR__ . '/../../src/DevRepository.php';
 
 loadEnv(__DIR__ . '/../../.env');
 date_default_timezone_set(env('APP_TIMEZONE', 'Asia/Taipei') ?? 'Asia/Taipei');
@@ -409,7 +410,7 @@ if ($isAuthenticated) {
                     'link' => trim((string)($_POST['link'] ?? '')),
                     'is_active' => isset($_POST['is_active']) ? 1 : 0,
                 ]);
-                redirectWithMessage('notice', '文章分享已新增。');
+                redirectWithMessage('notice', '恆寵愛日常分享已新增。');
             } elseif ($action === 'article_update') {
                 $id = (int)($_POST['id'] ?? 0);
                 if ($id > 0) {
@@ -434,7 +435,7 @@ if ($isAuthenticated) {
                         deleteLocalUploadIfUnused($repo, $oldImagePath);
                     }
 
-                    redirectWithMessage('notice', '文章分享已更新。');
+                    redirectWithMessage('notice', '恆寵愛日常分享已更新。');
                 }
             } elseif ($action === 'article_delete') {
                 $id = (int)($_POST['id'] ?? 0);
@@ -445,7 +446,7 @@ if ($isAuthenticated) {
                     if ($oldImagePath !== '') {
                         deleteLocalUploadIfUnused($repo, $oldImagePath);
                     }
-                    redirectWithMessage('notice', '文章分享已刪除。');
+                    redirectWithMessage('notice', '恆寵愛日常分享已刪除。');
                 }
             } elseif ($action === 'about_update') {
                 $repo->upsertAboutContent([
@@ -504,40 +505,121 @@ if ($isAuthenticated) {
                 redirectWithMessage('notice', '主視覺內容已更新。');
             } elseif ($action === 'senior_update') {
                 $imageUrl = trim((string)($_POST['image_url'] ?? ''));
+                $imageUrl2 = trim((string)($_POST['image_url_2'] ?? ''));
+                $imageUrl3 = trim((string)($_POST['image_url_3'] ?? ''));
+                $imageUrl4 = trim((string)($_POST['image_url_4'] ?? ''));
                 $compressToJpeg = isset($_POST['compress_to_jpeg']);
 
                 if (isset($_FILES['image_file']) && is_array($_FILES['image_file']) && (int)($_FILES['image_file']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
                     $imageUrl = normalizeUploadedImage($_FILES['image_file'], $compressToJpeg);
-                    $notice = $compressToJpeg ? '樂齡館內容已更新，圖片已壓縮為 JPEG。' : '樂齡館內容已更新，圖片已上傳。';
+                    $notice = $compressToJpeg ? '規範須知已更新，圖片已壓縮為 JPEG。' : '規範須知已更新，圖片已上傳。';
+                }
+                if (isset($_FILES['image_file_2']) && is_array($_FILES['image_file_2']) && (int)($_FILES['image_file_2']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+                    $imageUrl2 = normalizeUploadedImage($_FILES['image_file_2'], $compressToJpeg);
+                }
+                if (isset($_FILES['image_file_3']) && is_array($_FILES['image_file_3']) && (int)($_FILES['image_file_3']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+                    $imageUrl3 = normalizeUploadedImage($_FILES['image_file_3'], $compressToJpeg);
+                }
+                if (isset($_FILES['image_file_4']) && is_array($_FILES['image_file_4']) && (int)($_FILES['image_file_4']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+                    $imageUrl4 = normalizeUploadedImage($_FILES['image_file_4'], $compressToJpeg);
                 }
 
                 $repo->upsertSeniorCareContent([
-                        'title' => trim((string)($_POST['title'] ?? '樂齡館')),
+                        'title' => trim((string)($_POST['title'] ?? '規範須知')),
                         'subtitle' => trim((string)($_POST['subtitle'] ?? '')),
                         'description' => trim((string)($_POST['description'] ?? '')),
                         'tags' => trim((string)($_POST['tags'] ?? '')),
                         'image_url' => $imageUrl,
+                        'image_url_2' => $imageUrl2,
+                        'image_url_3' => $imageUrl3,
+                        'image_url_4' => $imageUrl4,
                 ]);
                 if ($notice === '') {
-                    $notice = '樂齡館內容已更新。';
+                    $notice = '規範須知已更新。';
                 }
 
                 redirectWithMessage('notice', $notice);
+            } elseif (in_array($action, ['dev_gallery_delete', 'dev_db_export', 'dev_db_import'])) {
+                $enableDevApi = filter_var((string) (env('APP_ENABLE_DEV_API', 'false') ?? 'false'), FILTER_VALIDATE_BOOL);
+                if (!$enableDevApi) {
+                    throw new RuntimeException('DEV 功能未啟用。');
+                }
+                $devRepo = new DevRepository(Database::getConnection());
+                if ($action === 'dev_gallery_delete') {
+                    $filename = trim((string)($_POST['filename'] ?? ''));
+                    if ($filename !== '') {
+                        $uploadsDir = realpath(__DIR__ . '/../uploads');
+                        if ($uploadsDir && $devRepo->deleteImage($uploadsDir, $filename)) {
+                            redirectWithMessage('notice', '已刪除圖片: ' . $filename);
+                        } else {
+                            throw new RuntimeException('圖片刪除失敗，找不到檔案或無權限。');
+                        }
+                    }
+                } elseif ($action === 'dev_db_export') {
+                    $noCreateInfo = isset($_POST['no_create_info']) && filter_var($_POST['no_create_info'], FILTER_VALIDATE_BOOL);
+                    $sql = $devRepo->exportDatabase($noCreateInfo);
+                    header('Content-Type: application/sql');
+                    header('Content-Disposition: attachment; filename="backup_' . date('Ymd_His') . ($noCreateInfo ? '_data_only' : '') . '.sql"');
+                    while (ob_get_level() > 0) ob_end_clean();
+                    echo $sql;
+                    exit;
+                } elseif ($action === 'dev_db_import') {
+                    if (isset($_FILES['db_file']) && is_array($_FILES['db_file']) && (int)($_FILES['db_file']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
+                         $sqlContent = file_get_contents($_FILES['db_file']['tmp_name']);
+                         if ($sqlContent === false || trim($sqlContent) === '') {
+                             throw new RuntimeException('無效或空白的 SQL 檔案。');
+                         }
+                         $devRepo->importDatabase($sqlContent);
+                         redirectWithMessage('notice', '資料庫匯入/還原成功！');
+                    } else {
+                         throw new RuntimeException('請選擇正確的 SQL 檔案進行匯入。');
+                    }
+                }
             }
         } catch (Throwable $e) {
             redirectWithMessage('error', '操作失敗：' . $e->getMessage());
         }
     }
 
-    $newsRows = $repo->getAllNews();
-    $articleRows = $repo->getAllArticles();
-    $aboutContent = $repo->getAboutContent();
-    $aboutModals = $repo->getAboutModals();
-    $storeInfo = $repo->getStoreInfo();
-    $senior = $repo->getSeniorCareContent();
-    $heroMain = $repo->getSectionByKey('hero');
-    $heroVisual = $repo->getSectionByKey('hero_visual');
+    // -------------------------------------------------------------------
+    // Load page data — each call is isolated so a stale schema column
+    // only degrades that specific section, not the entire admin panel.
+    // -------------------------------------------------------------------
+    $schemaWarnings = [];   // sections that failed to load
+    $adminLoadError = null; // set if ALL content loads failed
+
+    $safeLoad = static function (callable $fn, string $label, mixed $default) use (&$schemaWarnings): mixed {
+        try {
+            return $fn();
+        } catch (Throwable $e) {
+            $schemaWarnings[] = $label . '（' . $e->getMessage() . '）';
+            return $default;
+        }
+    };
+
+    $newsRows     = $safeLoad(fn() => $repo->getAllNews(),                        '最新消息',     []);
+    $articleRows  = $safeLoad(fn() => $repo->getAllArticles(),                     '文章分享',     []);
+    $aboutContent = $safeLoad(fn() => $repo->getAboutContent(),                   '關於恆寵愛',   []);
+    $aboutModals  = $safeLoad(fn() => $repo->getAboutModals(),                    '彈窗內容',     []);
+    $storeInfo    = $safeLoad(fn() => $repo->getStoreInfo(),                      '店家營業時間', []);
+    $senior       = $safeLoad(fn() => $repo->getSeniorCareContent(),              '規範須知',     []);
+    $heroMain     = $safeLoad(fn() => $repo->getSectionByKey('hero'),             'Hero 文字',    []);
+    $heroVisual   = $safeLoad(fn() => $repo->getSectionByKey('hero_visual'),      'Hero 圖片',    []);
     $seniorPreviewUrl = resolveDisplayImageUrl((string)($senior['imageUrl'] ?? ''), $publicBasePath);
+
+    $enableDevApi = filter_var((string) (env('APP_ENABLE_DEV_API', 'false') ?? 'false'), FILTER_VALIDATE_BOOL);
+    $galleryFiles = [];
+    if ($enableDevApi) {
+        $devRepo = new DevRepository(Database::getConnection());
+        $uploadsDir = realpath(__DIR__ . '/../uploads');
+        if ($uploadsDir) {
+            $galleryFiles = $safeLoad(fn() => $devRepo->getGallery($uploadsDir), '圖片庫', []);
+        }
+    }
+} else {
+    $schemaWarnings   = [];
+    $enableDevApi     = false;
+    $galleryFiles     = [];
 }
 ?>
 <!doctype html>
@@ -658,7 +740,7 @@ if ($isAuthenticated) {
             <div>
                 <p class="admin-kicker mb-1">Perpetuity Backend Console</p>
                 <h1 class="h3 mb-1"><i class="bi bi-speedometer2 me-2"></i>後台管理</h1>
-                <div class="small text-muted">快速維護首頁最新消息與樂齡館內容</div>
+                <div class="small text-muted">快速維護首頁最新消息與規範須知</div>
             </div>
             <div class="text-lg-end small text-muted">
                 <div class="mb-2">API: <code class="muted-code"><?= htmlspecialchars($baseApi, ENT_QUOTES, 'UTF-8') ?></code></div>
@@ -677,6 +759,19 @@ if ($isAuthenticated) {
     <?php endif; ?>
     <?php if ($error !== ''): ?>
         <div class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
+    <?php endif; ?>
+    <?php if (!empty($schemaWarnings)): ?>
+        <div class="alert alert-warning d-flex gap-2 align-items-start" role="alert">
+            <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1"></i>
+            <div>
+                <strong>資料庫 Schema 落後警告</strong>：以下區段因資料庫欄位不符無法正常載入，其餘功能仍可正常使用。請透過下方 DEV 工具匯入最新備份，或手動執行 <code>pet_hotel_site.sql</code> 更新結構。
+                <ul class="mb-0 mt-1">
+                    <?php foreach ($schemaWarnings as $w): ?>
+                        <li><?= htmlspecialchars($w, ENT_QUOTES, 'UTF-8') ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        </div>
     <?php endif; ?>
 
 
@@ -770,27 +865,32 @@ if ($isAuthenticated) {
 
     <ul class="nav nav-tabs mb-3" id="adminManageTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="tab-news-btn" data-bs-toggle="tab" data-bs-target="#tab-news" type="button" role="tab" aria-controls="tab-news" aria-selected="true">最新消息</button>
+            <button class="nav-link active" id="tab-about-btn" data-bs-toggle="tab" data-bs-target="#tab-about" type="button" role="tab" aria-controls="tab-about" aria-selected="true">關於恆寵愛</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tab-hero-btn" data-bs-toggle="tab" data-bs-target="#tab-hero" type="button" role="tab" aria-controls="tab-hero" aria-selected="false">主視覺</button>
+            <button class="nav-link" id="tab-news-btn" data-bs-toggle="tab" data-bs-target="#tab-news" type="button" role="tab" aria-controls="tab-news" aria-selected="false">最新消息</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tab-article-btn" data-bs-toggle="tab" data-bs-target="#tab-article" type="button" role="tab" aria-controls="tab-article" aria-selected="false">文章分享</button>
+            <button class="nav-link" id="tab-article-btn" data-bs-toggle="tab" data-bs-target="#tab-article" type="button" role="tab" aria-controls="tab-article" aria-selected="false">恆寵愛日常分享</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tab-about-btn" data-bs-toggle="tab" data-bs-target="#tab-about" type="button" role="tab" aria-controls="tab-about" aria-selected="false">關於恆寵愛</button>
+            <button class="nav-link" id="tab-senior-btn" data-bs-toggle="tab" data-bs-target="#tab-senior" type="button" role="tab" aria-controls="tab-senior" aria-selected="false">規範須知</button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="tab-store-btn" data-bs-toggle="tab" data-bs-target="#tab-store" type="button" role="tab" aria-controls="tab-store" aria-selected="false">營業時間</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tab-senior-btn" data-bs-toggle="tab" data-bs-target="#tab-senior" type="button" role="tab" aria-controls="tab-senior" aria-selected="false">樂齡館</button>
+            <button class="nav-link" id="tab-hero-btn" data-bs-toggle="tab" data-bs-target="#tab-hero" type="button" role="tab" aria-controls="tab-hero" aria-selected="false">主視覺</button>
         </li>
+        <?php if ($enableDevApi): ?>
+        <li class="nav-item ms-lg-auto" role="presentation">
+            <button class="nav-link text-danger fw-semibold" style="border-bottom-color: #dc3545;" id="tab-dev-btn" data-bs-toggle="tab" data-bs-target="#tab-dev" type="button" role="tab" aria-controls="tab-dev" aria-selected="false"><i class="bi bi-tools me-1"></i>系統開發</button>
+        </li>
+        <?php endif; ?>
     </ul>
 
     <div class="tab-content" id="adminManageTabContent">
-    <div class="tab-pane fade show active" id="tab-news" role="tabpanel" aria-labelledby="tab-news-btn" tabindex="0">
+    <div class="tab-pane fade" id="tab-news" role="tabpanel" aria-labelledby="tab-news-btn" tabindex="0">
 
     <div class="admin-card card mb-4">
         <div class="card-header justify-content-between d-flex fw-semibold">
@@ -990,7 +1090,7 @@ if ($isAuthenticated) {
                 <input type="hidden" name="action" value="article_create">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="createArticleModalLabel">新增文章分享</h5>
+                    <h5 class="modal-title" id="createArticleModalLabel">新增恆寵愛日常分享</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -1050,7 +1150,7 @@ if ($isAuthenticated) {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="submit" class="btn btn-primary">新增文章分享</button>
+                    <button type="submit" class="btn btn-primary">新增恆寵愛日常分享</button>
                 </div>
             </form>
         </div>
@@ -1123,11 +1223,11 @@ if ($isAuthenticated) {
 
     <div class="tab-pane fade" id="tab-article" role="tabpanel" aria-labelledby="tab-article-btn" tabindex="0">
     <div class="admin-card card mb-4">
-        <div class="card-header justify-content-between d-flex fw-semibold"><span><i class="bi bi-journal-richtext me-2"></i>文章分享</span><button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createArticleModal"><i class="bi bi-plus-circle me-1"></i>新增文章分享</button></div>
+        <div class="card-header justify-content-between d-flex fw-semibold"><span><i class="bi bi-journal-richtext me-2"></i>恆寵愛日常分享</span><button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createArticleModal"><i class="bi bi-plus-circle me-1"></i>新增恆寵愛日常分享</button></div>
         <div class="card-body">
 
             <?php if ($articleRows === []): ?>
-                <p class="text-muted mb-0">尚無文章分享資料</p>
+                <p class="text-muted mb-0">尚無恆寵愛日常分享資料</p>
             <?php else: ?>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -1174,7 +1274,7 @@ if ($isAuthenticated) {
                                             <input type="hidden" name="action" value="article_delete">
                                             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                                             <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('確定刪除這篇文章分享？')">刪除</button>
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('確定刪除這篇恆寵愛日常分享？')">刪除</button>
                                         </form>
                                     </div>
                                 </td>
@@ -1266,7 +1366,7 @@ if ($isAuthenticated) {
     </div>
     </div>
 
-    <div class="tab-pane fade" id="tab-about" role="tabpanel" aria-labelledby="tab-about-btn" tabindex="0">
+    <div class="tab-pane fade show active" id="tab-about" role="tabpanel" aria-labelledby="tab-about-btn" tabindex="0">
     <div class="admin-card card mb-4">
         <div class="card-header fw-semibold"><i class="bi bi-chat-square-heart me-2"></i>關於恆寵愛</div>
         <div class="card-body">
@@ -1388,7 +1488,7 @@ if ($isAuthenticated) {
 
     <div class="tab-pane fade" id="tab-senior" role="tabpanel" aria-labelledby="tab-senior-btn" tabindex="0">
     <div class="admin-card card mb-4">
-        <div class="card-header fw-semibold"><i class="bi bi-house-heart me-2"></i>樂齡館內容（前端動態區塊）</div>
+        <div class="card-header fw-semibold"><i class="bi bi-house-heart me-2"></i>規範須知（前端動態區塊）</div>
         <div class="card-body">
             <form method="post" class="row g-3" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="senior_update">
@@ -1398,7 +1498,7 @@ if ($isAuthenticated) {
                         <div class="col-md-6">
                             <div class="form-floating">
                                 <input type="text" name="title" class="form-control" id="senior-title"
-                                       value="<?= htmlspecialchars((string)($senior['title'] ?? '樂齡館'), ENT_QUOTES, 'UTF-8') ?>"
+                                       value="<?= htmlspecialchars((string)($senior['title'] ?? '規範須知'), ENT_QUOTES, 'UTF-8') ?>"
                                        placeholder="標題（title）" required>
                                 <label for="senior-title">標題（title）</label>
                             </div>
@@ -1429,17 +1529,62 @@ if ($isAuthenticated) {
                         </div>
                         <div class="col-12">
                             <div class="form-floating">
-                                <input type="url" name="image_url" class="form-control" id="senior-image-url"
+                                <input type="text" name="image_url" class="form-control" id="senior-image-url"
                                        value="<?= htmlspecialchars((string)($senior['imageUrl'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
-                                       placeholder="圖片連結（imageUrl）" required>
-                                <label for="senior-image-url">圖片連結（imageUrl）</label>
+                                       placeholder="圖片連結 1" required>
+                                <label for="senior-image-url">圖片連結 1</label>
                             </div>
                         </div>
                         <div class="col-12">
                             <div class="form-floating">
                                 <input type="file" name="image_file" class="form-control" id="senior-image-file"
                                        accept="image/jpeg,image/png,image/webp,image/gif">
-                                <label for="senior-image-file">或上傳圖片檔案（優先於圖片連結）</label>
+                                <label for="senior-image-file">或上傳圖片檔案 1（優先）</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <input type="text" name="image_url_2" class="form-control" id="senior-image-url-2"
+                                       value="<?= htmlspecialchars((string)($senior['imageUrl2'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                                       placeholder="圖片連結 2">
+                                <label for="senior-image-url-2">圖片連結 2</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <input type="file" name="image_file_2" class="form-control" id="senior-image-file-2"
+                                       accept="image/jpeg,image/png,image/webp,image/gif">
+                                <label for="senior-image-file-2">或上傳圖片檔案 2（優先）</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <input type="text" name="image_url_3" class="form-control" id="senior-image-url-3"
+                                       value="<?= htmlspecialchars((string)($senior['imageUrl3'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                                       placeholder="圖片連結 3">
+                                <label for="senior-image-url-3">圖片連結 3</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <input type="file" name="image_file_3" class="form-control" id="senior-image-file-3"
+                                       accept="image/jpeg,image/png,image/webp,image/gif">
+                                <label for="senior-image-file-3">或上傳圖片檔案 3（優先）</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <input type="text" name="image_url_4" class="form-control" id="senior-image-url-4"
+                                       value="<?= htmlspecialchars((string)($senior['imageUrl4'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                                       placeholder="圖片連結 4">
+                                <label for="senior-image-url-4">圖片連結 4</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <input type="file" name="image_file_4" class="form-control" id="senior-image-file-4"
+                                       accept="image/jpeg,image/png,image/webp,image/gif">
+                                <label for="senior-image-file-4">或上傳圖片檔案 4（優先）</label>
                             </div>
                             <div class="form-text">檔案會儲存到 <code>backend/public/uploads</code></div>
                         </div>
@@ -1457,7 +1602,7 @@ if ($isAuthenticated) {
                             id="senior-image-preview"
                             src="<?= htmlspecialchars($seniorPreviewUrl, ENT_QUOTES, 'UTF-8') ?>"
                             data-public-base-path="<?= htmlspecialchars($publicBasePath, ENT_QUOTES, 'UTF-8') ?>"
-                            alt="樂齡館預覽"
+                            alt="規範須知預覽"
                             class="w-100"
                             style="min-height: 220px; object-fit: cover;">
                         <div data-preview-placeholder="senior" class="position-absolute top-50 start-50 translate-middle text-secondary <?= $seniorPreviewUrl !== '' ? 'd-none' : '' ?>">目前無圖片</div>
@@ -1465,7 +1610,7 @@ if ($isAuthenticated) {
                     <div class="form-text">輸入圖片連結或選擇本機檔案後會立即顯示預覽。</div>
                 </div>
                 <div class="col-12">
-                    <button type="submit" class="btn btn-primary px-4"><i class="bi bi-save me-1"></i>儲存樂齡館內容
+                    <button type="submit" class="btn btn-primary px-4"><i class="bi bi-save me-1"></i>儲存規範須知
                     </button>
                 </div>
             </form>
@@ -1473,6 +1618,74 @@ if ($isAuthenticated) {
     </div>
     </div>
     </div>
+
+    <?php if ($enableDevApi): ?>
+    <div class="tab-pane fade" id="tab-dev" role="tabpanel" aria-labelledby="tab-dev-btn" tabindex="0">
+        <div class="admin-card card mb-4 border-danger">
+            <div class="card-header fw-semibold text-danger"><i class="bi bi-rocket-takeoff me-2"></i>系統開發 (DEV) - 資料庫維護</div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-6 border-end">
+                        <h5 class="mb-3">匯出資料庫 (Backup)</h5>
+                        <p class="text-muted small">將目前的資料庫結構與所有資料匯出為 <code>.sql</code> 備份檔案，建議在進行任何重大修改前先備份一次。</p>
+                        <form method="post" target="_blank" class="d-flex flex-wrap gap-2 align-items-center">
+                            <input type="hidden" name="action" value="dev_db_export">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                            <button type="submit" class="btn btn-outline-success"><i class="bi bi-download me-1"></i>完整備份 (.sql)</button>
+                            <button type="submit" name="no_create_info" value="true" class="btn btn-outline-secondary" title="只匯出資料 (REPLACE)，不含 CREATE TABLE"><i class="bi bi-database-down me-1"></i>匯出純資料 (.sql)</button>
+                        </form>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="mb-3 text-danger">匯入資料庫 (Restore)</h5>
+                        <p class="text-muted small">上傳 <code>.sql</code> 檔案以還原或覆蓋資料庫。系統具備自動回滾機制，若 SQL 執行過程中發生錯誤會自動復原至匯入前的狀態。</p>
+                        <form method="post" enctype="multipart/form-data" class="d-flex align-items-center gap-2" onsubmit="return confirm('警告：這將徹底覆蓋現有資料庫！請務必先匯出備份。確定要繼續嗎？')">
+                            <input type="hidden" name="action" value="dev_db_import">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                            <input type="file" name="db_file" class="form-control form-control-sm border-danger" accept=".sql" required>
+                            <button type="submit" class="btn btn-sm btn-danger text-nowrap px-3"><i class="bi bi-upload me-1"></i>執行匯入</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-card card mb-4">
+            <div class="card-header fw-semibold"><i class="bi bi-images me-2"></i>主機圖片庫 (Gallery)</div>
+            <div class="card-body">
+                <?php if (empty($galleryFiles)): ?>
+                    <p class="text-muted mb-0">目前 <code>uploads</code> 目錄下沒有任何圖片檔案。</p>
+                <?php else: ?>
+                    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
+                        <?php foreach ($galleryFiles as $file): ?>
+                            <div class="col">
+                                <div class="card h-100 shadow-sm border-0 bg-light">
+                                    <div class="ratio ratio-1x1 bg-white rounded-top text-center overflow-hidden">
+                                        <a href="<?= htmlspecialchars($publicBasePath . $file['file_path'], ENT_QUOTES, 'UTF-8') ?>" target="_blank">
+                                            <img src="<?= htmlspecialchars($publicBasePath . $file['file_path'], ENT_QUOTES, 'UTF-8') ?>" class="w-100 h-100" style="object-fit: cover;" alt="Gallery Image" loading="lazy">
+                                        </a>
+                                    </div>
+                                    <div class="card-body p-2 d-flex flex-column rounded-bottom border border-secondary border-opacity-25 border-top-0">
+                                        <div class="text-truncate small fw-medium mb-1" title="<?= htmlspecialchars($file['filename'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($file['filename'], ENT_QUOTES, 'UTF-8') ?></div>
+                                        <div class="text-muted mb-2 lh-sm" style="font-size: 0.75rem;">
+                                            <div><?= number_format($file['size_bytes'] / 1024, 1) ?> KB</div>
+                                            <div><?= date('Y/m/d H:i', strtotime($file['created_at'])) ?></div>
+                                        </div>
+                                        <form method="post" class="mt-auto text-end">
+                                            <input type="hidden" name="action" value="dev_gallery_delete">
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                                            <input type="hidden" name="filename" value="<?= htmlspecialchars($file['filename'], ENT_QUOTES, 'UTF-8') ?>">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm py-0 ms-auto pt-1 w-100" onclick="return confirm('確認永久刪除「<?= htmlspecialchars($file['filename'], ENT_QUOTES, 'UTF-8') ?>」？\n\n警告：若此圖片仍在其他內容中使用，前端可能會顯示破圖。')" title="刪除檔案"><i class="bi bi-trash3 me-1"></i> 刪除</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <div class="small text-muted">
         後台路徑：<code>/case0001_20260301/backend/public/admin/index.php</code>

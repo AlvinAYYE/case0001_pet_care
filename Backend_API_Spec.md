@@ -61,8 +61,11 @@
   "title": "樂齡館",
   "subtitle": "高齡犬與特殊需求毛孩照護",
   "description": "完整文案...",
-  "address": "台北市萬華區...",
-  "imageUrl": "https://cdn.example.com/senior-cover.jpg"
+  "tags": "#安靜休養 #高齡犬照護",
+  "imageUrl": "https://cdn.example.com/senior-cover.jpg",
+  "imageUrl2": "https://cdn.example.com/senior-2.jpg",
+  "imageUrl3": "https://cdn.example.com/senior-3.jpg",
+  "imageUrl4": "https://cdn.example.com/senior-4.jpg"
 }
 ```
 
@@ -71,8 +74,11 @@
 - `title`: `string`，分區名稱
 - `subtitle`: `string`，分區主標
 - `description`: `string`，段落文案
-- `address`: `string`，地址文字
-- `imageUrl`: `string`，完整可公開存取 URL（建議 1800px+）
+- `tags`: `string`，自訂標籤文字（空格分隔等）
+- `imageUrl`: `string`，完整可公開存取主圖 URL（建議 1800px+）
+- `imageUrl2`: `string`，附加圖片 2 URL（可為空）
+- `imageUrl3`: `string`，附加圖片 3 URL（可為空）
+- `imageUrl4`: `string`，附加圖片 4 URL（可為空）
 
 ## 4) 錯誤回傳建議
 
