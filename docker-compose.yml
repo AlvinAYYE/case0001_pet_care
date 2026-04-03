@@ -3,10 +3,10 @@ services:
     image: mysql:8.0
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootsecret}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-pet_hotel_site}
       MYSQL_USER: ${MYSQL_USER:-pet_hotel}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-pet_hotel_secret}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
       - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
@@ -29,12 +29,12 @@ services:
       APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Taipei}
       APP_FRONTEND_ORIGIN: ${APP_FRONTEND_ORIGIN:-http://localhost:5180}
       APP_DEBUG: ${APP_DEBUG:-true}
-      APP_API_KEY: ${APP_API_KEY:-dev-local-api-key}
+      APP_API_KEY: ${APP_API_KEY}
       DB_HOST: mysql
       DB_PORT: 3306
       DB_NAME: ${MYSQL_DATABASE:-pet_hotel_site}
       DB_USER: ${MYSQL_USER:-pet_hotel}
-      DB_PASS: ${MYSQL_PASSWORD:-pet_hotel_secret}
+      DB_PASS: ${MYSQL_PASSWORD}
       DB_CHARSET: utf8mb4
     command: /bin/sh -c "mkdir -p /var/www/html/public/uploads && chown -R www-data:www-data /var/www/html/public/uploads && chmod -R ug+rwX /var/www/html/public/uploads && apache2-foreground"
     ports:
