@@ -47,8 +47,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_NEWS_API_URL: ${VITE_NEWS_API_URL:-/api/news.php}
-        VITE_SENIOR_API_URL: ${VITE_SENIOR_API_URL:-/api/senior-care.php}
+        VITE_NEWS_API_URL: ${VITE_NEWS_API_URL:-/news}
+        VITE_SENIOR_API_URL: ${VITE_SENIOR_API_URL:-/senior-care}
     restart: unless-stopped
     depends_on:
       - backend

@@ -284,6 +284,28 @@ const apiClient = axios.create({
 
 const cleanText = (value?: string | null): string => value?.trim() || ''
 
+const normalizeApiEndpoint = (value: string | undefined, fallback: string): string => {
+  const rawValue = cleanText(value) || fallback
+
+  if (/^https?:\/\//i.test(rawValue)) {
+    try {
+      const absoluteUrl = new URL(rawValue)
+      absoluteUrl.pathname = absoluteUrl.pathname
+        .replace(/\/api\/api(?=\/)/g, '/api')
+        .replace(/\.php$/, '')
+      return absoluteUrl.toString()
+    } catch (_error) {
+      return rawValue
+    }
+  }
+
+  const normalizedPath = (rawValue.startsWith('/') ? rawValue : `/${rawValue}`)
+    .replace(/^\/api(?=\/)/, '')
+    .replace(/\.php$/, '')
+
+  return normalizedPath
+}
+
 const resolveMediaUrl = (raw?: string): string | undefined => {
   if (!raw) {
     return undefined
@@ -511,7 +533,7 @@ const normalizeArticleItem = (item: ApiNewsItem, index: number): ArticleShareIte
 })
 
 const seniorContent = ref<SeniorContent>({
-  title: '樂齡館',
+  title: '規範須知',
   subtitle: '高齡犬與特殊需求毛孩照護',
   description: '以低量收托與個別照護為原則，依需求調整生活安排，協助高齡犬維持穩定、降低壓力，守住生活品質。',
   tags: ['高齡犬照護', '安靜休養', '低量收托'],
@@ -521,8 +543,8 @@ const seniorContent = ref<SeniorContent>({
   imageUrl4: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=800&q=80',
 })
 
-const newsApiPath = import.meta.env.VITE_NEWS_API_URL || '/api/news.php'
-const seniorApiPath = import.meta.env.VITE_SENIOR_API_URL || '/api/senior-care.php'
+const newsApiPath = normalizeApiEndpoint(import.meta.env.VITE_NEWS_API_URL, '/news')
+const seniorApiPath = normalizeApiEndpoint(import.meta.env.VITE_SENIOR_API_URL, '/senior-care')
 
 const fallbackNews: NewsItem[] = [
   {
@@ -933,7 +955,7 @@ onMounted(async () => {
       <section id="about"
                class="mt-5 rounded-2xl border border-[#ccb392] bg-[#fff8eee8] p-8 shadow-[0_20px_36px_rgba(35,23,15,0.14)] backdrop-blur-sm max-md:p-6">
         <div>
-          <p class="text-sm font-bold uppercase tracking-[0.14em] text-[#8a6a4c] md:text-base">關於恆寵愛</p>
+          <p class="text-xl font-bold uppercase tracking-[0.14em] text-[#8a6a4c] md:text-3xl">關於恆寵愛</p>
           <h2 class="mt-1 text-[clamp(2.3rem,3.8vw,3.6rem)] text-[#2d241c]">{{ aboutTitle }}</h2>
           <p class="mt-4 whitespace-pre-line text-xl leading-relaxed text-[#5a4c3f] max-md:text-lg">
             {{ aboutIntro }}
@@ -964,7 +986,7 @@ onMounted(async () => {
       <section id="news"
                class="mt-5 rounded-2xl border border-[#ccb392] bg-[#fff8eee8] p-8 shadow-[0_20px_36px_rgba(35,23,15,0.14)] backdrop-blur-sm max-md:p-6">
         <div>
-          <p class="text-lg font-bold uppercase tracking-[0.14em] text-[#8a6a4c] md:text-base">最新消息</p>
+          <p class="text-xl font-bold uppercase tracking-[0.14em] text-[#8a6a4c] md:text-3xl">最新消息</p>
         </div>
 
         <p v-if="loadingNews" class="mt-3 text-[#5a4c3f]">載入最新消息中...</p>
@@ -1024,7 +1046,7 @@ onMounted(async () => {
       >
         <div class="self-start">
           <div>
-            <p class="text-lg font-bold uppercase tracking-[0.14em] text-[#8a6a4c] md:text-base">規範須知</p>
+            <p class="text-xl font-bold uppercase tracking-[0.14em] text-[#8a6a4c] md:text-3xl">{{ seniorContent.title }}</p>
             <h2 class="mt-1 whitespace-pre-line text-[clamp(2rem,3.2vw,3rem)] text-[#2d241c]">{{
                 seniorContent.subtitle
               }}</h2>
@@ -1069,7 +1091,7 @@ onMounted(async () => {
       <section id="articles"
                class="mt-5 rounded-2xl border border-[#ccb392] bg-[#fff8eee8] p-8 shadow-[0_20px_36px_rgba(35,23,15,0.14)] backdrop-blur-sm max-md:p-6">
         <div>
-          <p class="text-lg font-bold uppercase tracking-[0.14em] text-[#8a6a4c] md:text-base">{{
+          <p class="text-xl font-bold uppercase tracking-[0.14em] text-[#8a6a4c] md:text-3xl">{{
               articleShareHeading
             }}</p>
           <p class="mt-3 whitespace-pre-line text-lg leading-relaxed text-[#5a4c3f] max-md:text-base">
@@ -1103,7 +1125,7 @@ onMounted(async () => {
                   item.imageUrl ? (index % 2 === 0 ? 'md:order-2' : 'md:order-1') : 'md:col-span-2',
                 ]"
             >
-              <p class="text-sm font-bold uppercase tracking-[0.14em] text-[#8a6a4c] md:text-base">Article Share</p>
+<!--              <p class="text-xl font-bold uppercase tracking-[0.14em] text-[#8a6a4c] md:text-3xl">Article Share</p>-->
               <div v-if="item.publishedAt" class="inline-flex items-center gap-1.5 text-sm text-[#80664e]">
                 <CalendarDays :size="15"/>
                 <span>{{ item.publishedAt.slice(0, 10) }}</span>
@@ -1132,23 +1154,26 @@ onMounted(async () => {
       >
         <div>
           <h3 class="text-3xl text-[#fff9ef]">聯絡我們</h3>
-          <p class="mt-2 flex flex-col items-start gap-1">
-            <span class="inline-flex items-center gap-1.5 text-[#e8dccf] text-2xl">
+          <p class="mt-2 flex items-center gap-3 max-sm:flex-col max-sm:items-start">
+            <span class="inline-flex shrink-0 items-center gap-1.5 text-[#e8dccf] text-2xl">
               <MapPin :size="15"/>
               <span>地址</span>
             </span>
-            <span class="whitespace-pre-line">{{ storeInfo.address }}</span>
+            <span class="min-w-0 flex-1 whitespace-pre-line">{{ storeInfo.address }}</span>
           </p>
-          <p class="mt-2 flex flex-col items-start gap-1">
-            <span class="inline-flex items-center gap-1.5 text-[#e8dccf] text-2xl">
+          <p class="mt-2 flex items-center gap-3 max-sm:flex-col max-sm:items-start">
+            <span class="inline-flex shrink-0 items-center gap-1.5 text-[#e8dccf] text-2xl">
               <Phone :size="15"/>
               <span>電話</span>
             </span>
-            <span>{{ storeInfo.phone }}</span>
+            <span class="min-w-0 flex-1">{{ storeInfo.phone }}</span>
           </p>
-          <p class="mt-2 inline-flex items-center gap-1.5 text-2xl">
-            <Clock3 :size="15"/>
-            <span class="whitespace-pre-line">{{ storeInfo.businessHours }}</span>
+          <p class="mt-2 flex items-center gap-3 max-sm:flex-col max-sm:items-start">
+            <span class="inline-flex shrink-0 items-center gap-1.5 text-[#e8dccf] text-2xl">
+              <Clock3 :size="15"/>
+              <span>營業時間</span>
+            </span>
+            <span class="min-w-0 flex-1 whitespace-pre-line">{{ storeInfo.businessHours }}</span>
           </p>
           <h3 class="mt-6 text-3xl text-[#fff9ef]">社群媒體</h3>
           <div class="mt-3 grid gap-2 md:max-w-[280px]">
@@ -1168,8 +1193,8 @@ onMounted(async () => {
         <div class="overflow-hidden rounded-xl border border-white/20 bg-white/10">
           <iframe
               :src="mapEmbedSrc"
-              width="600" height="450" style="border:0;" allowfullscreen loading="lazy"
               referrerpolicy="no-referrer-when-downgrade"></iframe>
+          width="600" height="450" style="border:0;" allowfullscreen loading="lazy"
         </div>
       </div>
     </footer>

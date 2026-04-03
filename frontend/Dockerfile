@@ -5,8 +5,8 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 
-ARG VITE_NEWS_API_URL=/api/news.php
-ARG VITE_SENIOR_API_URL=/api/senior-care.php
+ARG VITE_NEWS_API_URL=/news
+ARG VITE_SENIOR_API_URL=/senior-care
 ENV VITE_NEWS_API_URL=${VITE_NEWS_API_URL}
 ENV VITE_SENIOR_API_URL=${VITE_SENIOR_API_URL}
 

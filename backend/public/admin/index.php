@@ -1507,7 +1507,7 @@ if ($isAuthenticated) {
                             <div class="form-floating">
                                 <input type="text" name="subtitle" class="form-control" id="senior-subtitle"
                                        value="<?= htmlspecialchars((string)($senior['subtitle'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
-                                       placeholder="副標（subtitle）" required>
+                                       placeholder="副標（subtitle）">
                                 <label for="senior-subtitle">副標（subtitle）</label>
                             </div>
                         </div>
