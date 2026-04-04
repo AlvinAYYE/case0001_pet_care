@@ -1193,8 +1193,14 @@ onMounted(async () => {
         <div class="overflow-hidden rounded-xl border border-white/20 bg-white/10">
           <iframe
               :src="mapEmbedSrc"
-              referrerpolicy="no-referrer-when-downgrade"></iframe>
-          width="600" height="450" style="border:0;" allowfullscreen loading="lazy"
+              width="600"
+              height="450"
+              style="border:0;"
+              allowfullscreen
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              class="h-full min-h-[320px] w-full"
+          ></iframe>
         </div>
       </div>
     </footer>
